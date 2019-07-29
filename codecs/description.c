@@ -1960,8 +1960,11 @@ static int isom_set_isom_opus_audio_description( isom_audio_entry_t *audio, lsma
     }
     else
         err = LSMASH_ERR_NAMELESS;
-    if( cs1 != src_cs )
+    if( cs1 != src_cs ) {
+        if ( err == 0 )
+            cs2->data.unstructured = NULL;   /* Avoid freeing the binary data of the extension. */
         lsmash_destroy_codec_specific_data( cs1 );
+    }
     if( cs2 != src_cs )
     {
         if( err == 0 )
