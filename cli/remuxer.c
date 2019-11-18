@@ -96,6 +96,7 @@ typedef struct
     int                       reach_end_of_media_timeline;
     uint32_t                  track_ID;
     uint32_t                  last_sample_delta;
+    uint64_t                  duration;
     uint32_t                  current_sample_number;
     uint32_t                  current_sample_index;
     uint32_t                  num_summaries;
@@ -158,6 +159,7 @@ typedef struct
     int                  dash;
     int                  compact_size_table;
     double               min_frag_duration;
+    double               last_frag_merge_thresh;
     int                  dry_run;
 } remuxer_t;
 
@@ -322,6 +324,9 @@ static void display_help( void )
              "  --min-frag-duration <float>\n"
              "      Specify the minimum duration which fragments are allowed to be.\n"
              "      This option requires --fragment.\n"
+             "  --last-frag-merge-thresh <float>\n"
+             "      Specify the threshold (as a percentage) for which the last two fragments should be merged.\n"
+             "      This option requires --min-frag-duration.\n"
              "  --dash <integer>\n"
              "      Enable DASH ISOBMFF-based Media segmentation.\n"
              "      The value is the number of subsegments per segment.\n"
@@ -567,6 +572,12 @@ static int get_movie( input_t *input, char *input_name )
             WARNING_MSG( "failed to construct timeline.\n" );
             continue;
         }
+        in_track[i].duration = lsmash_get_media_duration( input->root, in_track[i].track_ID);
+        if( !in_track[i].duration )
+        {
+            WARNING_MSG( "failed to get the media duration.\n" );
+            continue;
+        }
         if( lsmash_get_last_sample_delta_from_media_timeline( input->root, in_track[i].track_ID, &in_track[i].last_sample_delta ) )
         {
             WARNING_MSG( "failed to get the last sample delta.\n" );
@@ -777,6 +788,18 @@ static int parse_cli_option( int argc, char **argv, remuxer_t *remuxer )
                 FAILED_PARSE_CLI_OPTION( "%s is an invalid fragment duration.\n", argv[i] );
             else if( remuxer->frag_base_track == 0 )
                 FAILED_PARSE_CLI_OPTION( "--min-frag-duration requires --fragment also be set.\n" );
+        }
+        else if ( !strcasecmp( argv[i], "--last-frag-merge-thresh" ) )
+        {
+            if ( ++i == argc )
+                FAILED_PARSE_CLI_OPTION( "--last-frag-merge-thresh requires an argument.\n" );
+            remuxer->last_frag_merge_thresh = atof( argv[i] );
+            if( remuxer->last_frag_merge_thresh == 0.0 || remuxer->last_frag_merge_thresh == -0.0 || remuxer->last_frag_merge_thresh >= 1.0 )
+                FAILED_PARSE_CLI_OPTION( "%s is an invalid fragment duration. Must be in (0, 1).\n", argv[i] );
+            else if( remuxer->frag_base_track == 0 )
+                FAILED_PARSE_CLI_OPTION( "--last-frag-merge-thresh requires --fragment also be set.\n" );
+            else if( remuxer->min_frag_duration == 0.0 )
+                FAILED_PARSE_CLI_OPTION( "--last-frag-merge-thresh requires --min-frag-duration also be set.\n" );
         }
         else if( !strcasecmp( argv[i], "--dash" ) )
         {
@@ -1573,8 +1596,16 @@ static int do_remux( remuxer_t *remuxer )
                         if( remuxer->min_frag_duration != 0.0 )
                         {
                             lsmash_sample_t info;
-                            if( lsmash_get_sample_info_from_media_timeline( in->root, in_track->track_ID, in_track->current_sample_number + 1, &info ) >= 0 )
-                                over_duration = ((double)info.dts / in_track->media.param.timescale) - frag_base_dts >= remuxer->min_frag_duration;
+                            int newsamp = lsmash_get_sample_info_from_media_timeline( in->root, in_track->track_ID, in_track->current_sample_number + 1, &info );
+                            double cur_dts = ((double)info.dts / in_track->media.param.timescale);
+                            double dur_in_s = (double) in_track->duration / (double) in_track->media.param.timescale;
+                            if( newsamp >= 0 )
+                                over_duration = cur_dts - frag_base_dts >= remuxer->min_frag_duration;
+                            if( over_duration && dur_in_s != 0.0 && remuxer->last_frag_merge_thresh != 0.0 )
+                            {
+                                double left = dur_in_s - cur_dts;
+                                over_duration = left > (remuxer->min_frag_duration * remuxer->last_frag_merge_thresh);
+                            }
                         }
                         if( remuxer->frag_base_track == out_movie->current_track_number
                          && sample->prop.ra_flags != ISOM_SAMPLE_RANDOM_ACCESS_FLAG_NONE
