@@ -22,11 +22,12 @@
 
 #include "common/internal.h" /* must be placed first */
 
-#include "codecs/obuparse.h"
+#include <string.h>
+
+#include <obuparse.h>
+
 #include "codecs/av1.h"
 #include "codecs/av1_obu.h"
-
-#include <string.h>
 
 lsmash_av1_specific_parameters_t *obu_av1_parse_first_tu
 (

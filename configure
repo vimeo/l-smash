@@ -116,7 +116,7 @@ TOOLS=""
 CFLAGS="-Wshadow -Wall -std=c99 -pedantic -I. -I$SRCDIR"
 LDFLAGS="-L."
 SO_LDFLAGS='-shared -Wl,-soname,$@ -Wl,--version-script,liblsmash.ver'
-LIBS="-lm"
+LIBS="-lm -lobuparse"
 
 for opt; do
     optarg="${opt#*=}"
@@ -316,7 +316,6 @@ SRC_CODECS="      \
     alac.c        \
     av1.c         \
     av1_obu.c     \
-    obuparse.c    \
     description.c \
     dts.c         \
     h264.c        \
