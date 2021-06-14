@@ -209,15 +209,28 @@ uint64_t h264_find_next_start_code
         if( !lsmash_bs_is_end( bs, distance + NALU_SHORT_START_CODE_LENGTH ) )
         {
             uint32_t sync_bytes = lsmash_bs_show_be24( bs, distance );
+            uint64_t till_end   = lsmash_bs_get_remaining_buffer_size( bs ) - distance;
+            uint8_t *nal_data   = lsmash_bs_get_buffer_data_start( bs );
+            uint64_t nal_pos    = lsmash_bs_get_pos( bs ) + distance + 2;
             while( 0x000001 != sync_bytes )
             {
-                if( lsmash_bs_is_end( bs, ++distance + NALU_SHORT_START_CODE_LENGTH ) )
+                till_end--;
+                if( till_end < 1 + NALU_SHORT_START_CODE_LENGTH )
                 {
-                    distance = lsmash_bs_get_remaining_buffer_size( bs );
-                    break;
+                    /* The call to lsmash_bs_is_end will also refill the buffer if needed. */
+                    if( lsmash_bs_is_end( bs, distance + 1 + NALU_SHORT_START_CODE_LENGTH ))
+                    {
+                        distance = lsmash_bs_get_remaining_buffer_size( bs );
+                        break;
+                    }
+                    till_end = lsmash_bs_get_remaining_buffer_size( bs );
+                    nal_data = lsmash_bs_get_buffer_data_start( bs );
+                    nal_pos  = lsmash_bs_get_pos( bs ) + distance + 2;
                 }
+                distance++;
+                nal_pos++;
                 sync_bytes <<= 8;
-                sync_bytes  |= lsmash_bs_show_byte( bs, distance + NALU_SHORT_START_CODE_LENGTH - 1 );
+                sync_bytes  |= nal_data[nal_pos];
                 sync_bytes  &= 0xFFFFFF;
             }
         }
