@@ -134,9 +134,11 @@ int lsmash_importer_find( importer_t *importer, const char *format, int auto_det
     int err = LSMASH_ERR_NAMELESS;
     if( auto_detect )
     {
+        size_t old_bs_max_size = importer->bs->buffer.max_size;
         /* just rely on detector. */
         for( int i = 0; (funcs = importer_func_table[i]) != NULL; i++ )
         {
+            importer->bs->buffer.max_size = old_bs_max_size;
             importer->class = &funcs->class;
             if( !funcs->detectable )
                 continue;

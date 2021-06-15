@@ -83,7 +83,7 @@ void lsmash_bs_empty( lsmash_bs_t *bs )
 {
     if( !bs )
         return;
-    if( bs->buffer.data )
+    if( bs->buffer.data && bs->write != NULL )
         memset( bs->buffer.data, 0, bs->buffer.alloc );
     bs->buffer.store = 0;
     bs->buffer.pos   = 0;
