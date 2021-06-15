@@ -23,6 +23,7 @@
 #include "common/internal.h" /* must be placed first */
 
 #include <string.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <inttypes.h>
 
@@ -186,6 +187,8 @@ static int h264_check_nalu_header
     return 0;
 }
 
+#define has_zero(v) (((v) - 0x0101010101010101) & ~(v) & 0x8080808080808080UL)
+
 uint64_t h264_find_next_start_code
 (
     lsmash_bs_t        *bs,
@@ -208,31 +211,54 @@ uint64_t h264_find_next_start_code
         /* Find the start code of the next NALU and get the distance from the start code of the latest NALU. */
         if( !lsmash_bs_is_end( bs, distance + NALU_SHORT_START_CODE_LENGTH ) )
         {
-            uint32_t sync_bytes = lsmash_bs_show_be24( bs, distance );
+            uint32_t sync_bytes = 0xFFFFFFFF;
             uint64_t till_end   = lsmash_bs_get_remaining_buffer_size( bs ) - distance;
             uint8_t *nal_data   = lsmash_bs_get_buffer_data_start( bs );
-            uint64_t nal_pos    = lsmash_bs_get_pos( bs ) + distance + 2;
+            uint64_t nal_pos    = lsmash_bs_get_pos( bs ) + distance;
             while( 0x000001 != sync_bytes )
             {
                 till_end--;
                 if( till_end < 1 + NALU_SHORT_START_CODE_LENGTH )
                 {
                     /* The call to lsmash_bs_is_end will also refill the buffer if needed. */
-                    if( lsmash_bs_is_end( bs, distance + 1 + NALU_SHORT_START_CODE_LENGTH ))
+                    if( lsmash_bs_is_end( bs, distance + 1 + NALU_SHORT_START_CODE_LENGTH+ 5 ))
                     {
-                        distance = lsmash_bs_get_remaining_buffer_size( bs );
+                        distance = lsmash_bs_get_remaining_buffer_size( bs ) + 3;
                         break;
                     }
                     till_end = lsmash_bs_get_remaining_buffer_size( bs );
                     nal_data = lsmash_bs_get_buffer_data_start( bs );
-                    nal_pos  = lsmash_bs_get_pos( bs ) + distance + 2;
+                    nal_pos  = lsmash_bs_get_pos( bs ) + distance;
                 }
-                distance++;
-                nal_pos++;
+                bool saw = 0;
+                uint64_t sync_bytes_64 = ( (uint64_t) sync_bytes << 40 ) | 0xFFFFFFFFFF;
+                /* We can go in 8 byte chunks checking for zeroes efficiently and only look for start codes if we see one. */
+                while( till_end >= 1 + NALU_SHORT_START_CODE_LENGTH + 4 && !has_zero( sync_bytes_64 ) ) {
+                    sync_bytes_64 = ( (uint64_t) nal_data[nal_pos    ] << 56 ) | ( (uint64_t) nal_data[nal_pos + 1] << 48 ) |
+                                    ( (uint64_t) nal_data[nal_pos + 2] << 40 ) | ( (uint64_t) nal_data[nal_pos + 3] << 32 ) |
+                                    ( (uint64_t) nal_data[nal_pos + 4] << 24 ) | ( (uint64_t) nal_data[nal_pos + 5] << 16 ) |
+                                    ( (uint64_t) nal_data[nal_pos + 6] << 8  ) |   (uint64_t) nal_data[nal_pos + 7];
+                    nal_pos  += 8;
+                    distance += 8;
+                    till_end -= 8;
+                    saw       = true;
+                }
+                if (saw) {
+                    /* If we've seen a zero, come back to 24-bit mode and go byte by byte. */
+                    nal_pos        -= 5;
+                    distance       -= 5;
+                    till_end       += 6;
+                    sync_bytes_64 >>= 40;
+                    sync_bytes      = sync_bytes_64;
+                    continue;
+                }
                 sync_bytes <<= 8;
                 sync_bytes  |= nal_data[nal_pos];
                 sync_bytes  &= 0xFFFFFF;
+                nal_pos++;
+                distance++;
             }
+            distance -= 3;
         }
         else
             distance = lsmash_bs_get_remaining_buffer_size( bs );
