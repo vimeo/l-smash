@@ -87,6 +87,9 @@ typedef struct
     int      disable;
     int      sbr;
     int      user_fps;
+    int      has_dv;
+    uint8_t  dv_profile;
+    uint8_t  dv_bl_signal_compatibility_id;
     uint32_t fps_num;
     uint32_t fps_den;
     uint32_t encoder_delay;
@@ -267,6 +270,7 @@ static void display_help( void )
              "\n"
              "Track options:\n"
              "    disable                   Disable this track\n"
+             "    dv-profile=<arg>          Specify Dolby Vision profile\n"
              "    fps=<arg>                 Specify video framerate\n"
              "                                  <arg> is <integer> or <integer>/<integer>\n"
              "    language=<string>         Specify media language\n"
@@ -662,6 +666,16 @@ static int parse_track_options( input_t *input )
                 char *track_parameter = strchr( track_option, '=' ) + 1;
                 track_opt->ISO_language = lsmash_pack_iso_language( track_parameter );
             }
+            else if( strstr( track_option, "dv-profile=" ) )
+            {
+                char *track_parameter = strchr( track_option, '=' ) + 1;
+                if( sscanf( track_parameter, "%"SCNu8".%"SCNu8, &track_opt->dv_profile, &track_opt->dv_bl_signal_compatibility_id ) == 1 )
+                {
+                    track_opt->dv_profile = atoi( track_parameter );
+                    track_opt->dv_bl_signal_compatibility_id = 0;
+                }
+                track_opt->has_dv = 1;
+            }
             else if( strstr( track_option, "fps=" ) )
             {
                 char *track_parameter = strchr( track_option, '=' ) + 1;
@@ -792,6 +806,8 @@ static int open_input_files( muxer_t *muxer )
             {
                 if( !opt->isom && opt->qtff )
                     return ERROR_MSG( "the input seems HEVC, at present available only for ISO Base Media file format.\n" );
+                if( in_track->opt.has_dv )
+                    add_brand( opt, ISOM_BRAND_TYPE_DBY1 );
             }
             else if( lsmash_check_codec_type_identical( codec_type, ISOM_CODEC_TYPE_VC_1_VIDEO ) )
             {
@@ -1008,6 +1024,19 @@ static int prepare_output( muxer_t *muxer )
                             timescale = summary->timescale;
                             timebase  = summary->timebase;
                         }
+                    }
+                    if( track_opt->has_dv )
+                    {
+                        lsmash_codec_specific_t *dovi = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI,
+                                                                                           LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                        if( !dovi )
+                            return ERROR_MSG("Failed to allocate Dolby Vision configuration box.");
+                        lsmash_dovi_set_config(((lsmash_hevc_dovi_t*)dovi->data.structured), track_opt->dv_profile,
+                                               track_opt->dv_bl_signal_compatibility_id, timescale, timebase,
+                                               summary->width, summary->height);
+
+                        lsmash_add_codec_specific_data( in_track->summary, dovi );
+                        lsmash_destroy_codec_specific_data( dovi );
                     }
                     media_param.timescale          = timescale;
                     media_param.media_handler_name = track_opt->handler_name ? track_opt->handler_name : "L-SMASH Video Handler";

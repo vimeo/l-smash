@@ -1495,6 +1495,7 @@ DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_cspc, cspc, visual,   QT_BOX_TYPE
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_sgbt, sgbt, visual,   QT_BOX_TYPE_SGBT, LSMASH_BOX_PRECEDENCE_QTFF_SGBT, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_stsl, stsl, visual, ISOM_BOX_TYPE_STSL, LSMASH_BOX_PRECEDENCE_ISOM_STSL, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_btrt, btrt, visual, ISOM_BOX_TYPE_BTRT, LSMASH_BOX_PRECEDENCE_ISOM_BTRT, 0, isom_visual_entry_t )
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_dovi, dovi, visual, ISOM_BOX_TYPE_DVVC, LSMASH_BOX_PRECEDENCE_ISOM_DOVI, 0, isom_visual_entry_t ) // DVVC is just a placeholder
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_wave, wave, audio,    QT_BOX_TYPE_WAVE, LSMASH_BOX_PRECEDENCE_QTFF_WAVE, 0, isom_audio_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_chan, chan, audio,    QT_BOX_TYPE_CHAN, LSMASH_BOX_PRECEDENCE_QTFF_CHAN, 1, isom_audio_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_srat, srat, audio,  ISOM_BOX_TYPE_SRAT, LSMASH_BOX_PRECEDENCE_ISOM_SRAT, 0, isom_audio_entry_t )

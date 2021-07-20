@@ -931,6 +931,8 @@ typedef enum
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_DTS,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC,
 
+    LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI,
+
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_H264_BITRATE,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_RTP_HINT_COMMON,
@@ -3112,6 +3114,30 @@ typedef struct
     uint32_t maxBitrate;    /* the maximum rate in bits/second over any window of one second */
     uint32_t avgBitrate;    /* the average rate in bits/second over the entire presentation */
 } lsmash_h264_bitrate_t;
+
+typedef struct {
+    uint8_t dv_version_major;
+    uint8_t dv_version_minor;
+    uint8_t dv_profile;
+    uint8_t dv_level;
+    int rpu_present_flag;
+    int el_present_flag;
+    int bl_present_flag;
+    uint8_t dv_bl_signal_compatibility_id;
+    uint32_t reserved1;
+    uint32_t reserved2[4];
+} lsmash_hevc_dovi_t;
+
+void lsmash_dovi_set_config
+(
+    lsmash_hevc_dovi_t *data,
+    uint8_t dv_profile,
+    uint8_t dv_bl_signal_compatibility_id,
+    uint32_t timescale,
+    uint32_t timebase,
+    uint32_t width,
+    uint32_t height
+);
 
 /* Appendability of NAL unit into Decoder Configuration Record */
 typedef enum
