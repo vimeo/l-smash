@@ -1319,6 +1319,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
     extern int mp4sys_print_codec_specific( FILE *, lsmash_file_t *, isom_box_t *, int );
     extern int h264_print_codec_specific( FILE *, lsmash_file_t *, isom_box_t *, int );
     extern int hevc_print_codec_specific( FILE *, lsmash_file_t *, isom_box_t *, int );
+    extern int hevc_print_dovi( FILE *, lsmash_file_t *, isom_box_t *, int );
     extern int h264_print_bitrate( FILE *, lsmash_file_t *, isom_box_t *, int );
     extern int vc1_print_codec_specific( FILE *, lsmash_file_t *, isom_box_t *, int );
     extern int av1_print_codec_specific( FILE *, lsmash_file_t *, isom_box_t *, int );
@@ -1332,7 +1333,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
     {
         lsmash_box_type_t type;
         int (*print_func)( FILE *, lsmash_file_t *, isom_box_t *, int );
-    } print_description_extension_table[32] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
+    } print_description_extension_table[33] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
     if( !print_description_extension_table[0].print_func )
     {
         /* Initialize the table. */
@@ -1358,6 +1359,8 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_AV1C, av1_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_AVCC, h264_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_BTRT, h264_print_bitrate );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, hevc_print_dovi );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, hevc_print_dovi );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_HVCC, hevc_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_DVC1, vc1_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_DAC3, ac3_print_codec_specific );

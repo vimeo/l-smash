@@ -252,6 +252,10 @@ static int isom_initialize_structured_codec_specific_data( lsmash_codec_specific
             specific->size     = sizeof(lsmash_alac_specific_parameters_t);
             specific->destruct = lsmash_free;
             break;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
+            specific->size     = sizeof(lsmash_hevc_dovi_t);
+            specific->destruct = lsmash_free;
+            break;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE :
             specific->size     = sizeof(lsmash_isom_sample_scale_t);
             specific->destruct = lsmash_free;
@@ -401,6 +405,9 @@ static int isom_duplicate_structured_specific_data( lsmash_codec_specific_t *dst
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC :
             *(lsmash_alac_specific_parameters_t *)dst_data = *(lsmash_alac_specific_parameters_t *)src_data;
             return 0;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
+             *(lsmash_hevc_dovi_t *)dst_data = *(lsmash_hevc_dovi_t *)src_data;
+             return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE :
             *(lsmash_isom_sample_scale_t *)dst_data = *(lsmash_isom_sample_scale_t *)src_data;
             return 0;
@@ -907,6 +914,8 @@ static lsmash_box_type_t isom_guess_video_codec_specific_box_type( lsmash_codec_
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( ISOM_CODEC_TYPE_VC_1_VIDEO,    ISOM_BOX_TYPE_DVC1 );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( ISOM_CODEC_TYPE_MP4V_VIDEO,    ISOM_BOX_TYPE_ESDS );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_BTRT );
+    GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_DVCC );
+    GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_DVVC );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED,   QT_BOX_TYPE_FIEL );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED,   QT_BOX_TYPE_CSPC );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED,   QT_BOX_TYPE_SGBT );
@@ -1014,6 +1023,34 @@ static int isom_setup_visual_description( isom_stsd_t *stsd, lsmash_video_summar
                 stsl->scale_method     = data->scale_method;
                 stsl->display_center_x = data->display_center_x;
                 stsl->display_center_y = data->display_center_y;
+                lsmash_destroy_codec_specific_data( cs );
+                break;
+            }
+            case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI :
+            {
+                lsmash_codec_specific_t *cs = lsmash_convert_codec_specific_format( specific, LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !cs )
+                    goto fail;
+                lsmash_hevc_dovi_t *data = (lsmash_hevc_dovi_t *)cs->data.structured;
+                isom_dovi_t *dovi = isom_add_dovi( visual );
+                if( LSMASH_IS_NON_EXISTING_BOX( dovi ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+                dovi->dv_version_major              = data->dv_version_major;
+                dovi->dv_version_minor              = data->dv_version_minor;
+                dovi->dv_profile                    = data->dv_profile;
+                dovi->dv_level                      = data->dv_level;
+                dovi->rpu_present_flag              = data->rpu_present_flag;
+                dovi->el_present_flag               = data->el_present_flag;
+                dovi->bl_present_flag               = data->bl_present_flag;
+                dovi->dv_bl_signal_compatibility_id = data->dv_bl_signal_compatibility_id;
+                dovi->reserved1                     = data->reserved1;
+                dovi->reserved2[0]                  = data->reserved2[0];
+                dovi->reserved2[1]                  = data->reserved2[1];
+                dovi->reserved2[2]                  = data->reserved2[2];
+                dovi->reserved2[3]                  = data->reserved2[3];
                 lsmash_destroy_codec_specific_data( cs );
                 break;
             }
@@ -2477,7 +2514,7 @@ static lsmash_codec_specific_data_type isom_get_codec_specific_data_type( lsmash
     {
         lsmash_compact_box_type_t       extension_fourcc;
         lsmash_codec_specific_data_type data_type;
-    } codec_specific_data_type_table[32] = { { 0, LSMASH_CODEC_SPECIFIC_DATA_TYPE_UNKNOWN } };
+    } codec_specific_data_type_table[33] = { { 0, LSMASH_CODEC_SPECIFIC_DATA_TYPE_UNKNOWN } };
     if( codec_specific_data_type_table[0].data_type == LSMASH_CODEC_SPECIFIC_DATA_TYPE_UNKNOWN )
     {
         int i = 0;
@@ -2492,6 +2529,8 @@ static lsmash_codec_specific_data_type isom_get_codec_specific_data_type( lsmash
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DDTS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_DTS );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DOPS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_OPUS );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ALAC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ESDS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_MP4SYS_DECODER_CONFIG );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_STSL, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_BTRT, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_H264_BITRATE );
@@ -2626,6 +2665,28 @@ lsmash_summary_t *isom_create_video_summary_from_description( isom_sample_entry_
                 data->scale_method     = stsl->scale_method;
                 data->display_center_x = stsl->display_center_x;
                 data->display_center_y = stsl->display_center_y;
+            }
+            else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_DVVC ) || lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_DVCC ) )
+            {
+                specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI,
+                                                              LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !specific )
+                    goto fail;
+                isom_dovi_t *dovi = (isom_dovi_t *)box;
+                lsmash_hevc_dovi_t *data = (lsmash_hevc_dovi_t *)specific->data.structured;
+                data->dv_version_major              = dovi->dv_version_major;
+                data->dv_version_minor              = dovi->dv_version_minor;
+                data->dv_profile                    = dovi->dv_profile;
+                data->dv_level                      = dovi->dv_level;
+                data->rpu_present_flag              = dovi->rpu_present_flag;
+                data->el_present_flag               = dovi->el_present_flag;
+                data->bl_present_flag               = dovi->bl_present_flag;
+                data->dv_bl_signal_compatibility_id = dovi->dv_bl_signal_compatibility_id;
+                data->reserved1                     = dovi->reserved1;
+                data->reserved2[0]                  = dovi->reserved2[0];
+                data->reserved2[1]                  = dovi->reserved2[1];
+                data->reserved2[2]                  = dovi->reserved2[2];
+                data->reserved2[3]                  = dovi->reserved2[3];
             }
             else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_BTRT ) )
             {

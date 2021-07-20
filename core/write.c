@@ -496,6 +496,34 @@ static int isom_write_btrt( lsmash_bs_t *bs, isom_box_t *box )
     return 0;
 }
 
+static int isom_write_dovi( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_dovi_t *dovi = (isom_dovi_t *)box;
+    lsmash_bs_put_be32( bs, 32 );
+    lsmash_bs_put_be32( bs, dovi->dv_profile <= 7 ? ISOM_BOX_TYPE_DVCC.fourcc : ISOM_BOX_TYPE_DVVC.fourcc );
+    lsmash_bs_put_byte( bs, dovi->dv_version_major );
+    lsmash_bs_put_byte( bs, dovi->dv_version_minor );
+
+    uint16_t temp16 = 0;
+    temp16 |= ((uint16_t) dovi->dv_profile) << 9;
+    temp16 |= ((uint16_t) dovi->dv_level) << 3;
+    temp16 |= ((uint16_t) dovi->rpu_present_flag) << 2;
+    temp16 |= ((uint16_t) dovi->el_present_flag) << 1;
+    temp16 |= ((uint16_t) dovi->bl_present_flag);
+    lsmash_bs_put_be16( bs, temp16 );
+
+    uint32_t temp32 = 0;
+    temp32 |= ((uint32_t) dovi->dv_bl_signal_compatibility_id) << 28;
+    temp32 |= dovi->reserved1;
+    lsmash_bs_put_be32( bs, temp32 );
+
+    lsmash_bs_put_be32( bs, dovi->reserved2[0] );
+    lsmash_bs_put_be32( bs, dovi->reserved2[1] );
+    lsmash_bs_put_be32( bs, dovi->reserved2[2] );
+    lsmash_bs_put_be32( bs, dovi->reserved2[3] );
+    return 0;
+}
+
 static int isom_write_tims( lsmash_bs_t *bs, isom_box_t *box )
 {
     isom_tims_t *tims = (isom_tims_t *)box;
@@ -1668,6 +1696,8 @@ void isom_set_box_writer( isom_box_t *box )
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_URL,  isom_write_url  );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_STBL, isom_write_stbl );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_STSD, isom_write_stsd );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, isom_write_dovi );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, isom_write_dovi );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_BTRT, isom_write_btrt );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_TIMS, isom_write_tims );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_TSRO, isom_write_tsro );

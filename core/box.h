@@ -488,6 +488,20 @@ typedef struct
     uint32_t avgBitrate;    /* the average rate in bits/second over the entire presentation */
 } isom_btrt_t;
 
+typedef struct {
+    ISOM_BASEBOX_COMMON;
+    uint8_t dv_version_major;
+    uint8_t dv_version_minor;
+    uint8_t dv_profile;
+    uint8_t dv_level;
+    int rpu_present_flag;
+    int el_present_flag;
+    int bl_present_flag;
+    uint8_t dv_bl_signal_compatibility_id;
+    uint32_t reserved1;
+    uint32_t reserved2[4];
+} isom_dovi_t;
+
 typedef struct
 {
     /* This box is in RTP and RTP reception hint track sample descriptions */
@@ -2097,6 +2111,7 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_QTFF_GLBL (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_ESDS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_QTFF_ESDS (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)   /* preceded by 'frma' and 'mp4a' */
+#define LSMASH_BOX_PRECEDENCE_ISOM_DOVI (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_BTRT (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TIMS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TSRO (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
@@ -2594,6 +2609,7 @@ isom_mdcv_t *isom_add_mdcv( isom_visual_entry_t *visual );
 isom_cspc_t *isom_add_cspc( isom_visual_entry_t *visual );
 isom_sgbt_t *isom_add_sgbt( isom_visual_entry_t *visual );
 isom_stsl_t *isom_add_stsl( isom_visual_entry_t *visual );
+isom_dovi_t *isom_add_dovi( isom_visual_entry_t *visual );
 isom_btrt_t *isom_add_btrt( isom_visual_entry_t *visual );
 isom_tims_t *isom_add_tims( isom_hint_entry_t *hint );
 isom_tsro_t *isom_add_tsro( isom_hint_entry_t *hint );

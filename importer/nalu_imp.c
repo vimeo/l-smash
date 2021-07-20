@@ -1144,7 +1144,8 @@ static int hevc_get_access_unit_internal
         }
         else if( nalu_type <= HEVC_NALU_TYPE_RASL_R
              || (nalu_type >= HEVC_NALU_TYPE_BLA_W_LP && nalu_type <= HEVC_NALU_TYPE_CRA)
-             || (nalu_type >= HEVC_NALU_TYPE_VPS      && nalu_type <= HEVC_NALU_TYPE_SUFFIX_SEI)  )
+             || (nalu_type >= HEVC_NALU_TYPE_VPS      && nalu_type <= HEVC_NALU_TYPE_SUFFIX_SEI)
+             || (nalu_type == HEVC_NALU_TYPE_UNSPEC62 || nalu_type == HEVC_NALU_TYPE_UNSPEC63) )
         {
             int err;
             /* Increase the buffer if needed. */
