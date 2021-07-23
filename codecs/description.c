@@ -1275,11 +1275,11 @@ static int isom_setup_visual_description( isom_stsd_t *stsd, lsmash_video_summar
         {
             colr->type                    = ISOM_BOX_TYPE_COLR;
             colr->color_parameter_type    = ISOM_COLOR_PARAMETER_TYPE_NCLX;
-            colr->primaries_index         = (primaries == 1 || (primaries >= 4 && primaries <= 7))
+            colr->primaries_index         = (primaries == 1 || (primaries >= 4 && primaries <= 9))
                                           ? primaries : ISOM_PRIMARIES_INDEX_UNSPECIFIED;
-            colr->transfer_function_index = (transfer == 1 || (transfer >= 4 && transfer <= 8) || (transfer >= 11 && transfer <= 13))
+            colr->transfer_function_index = (transfer == 1 || (transfer >= 4 && transfer <= 8) || (transfer >= 11 && transfer <= 18))
                                           ? transfer : ISOM_TRANSFER_INDEX_UNSPECIFIED;
-            colr->matrix_index            = (matrix == 1 || (matrix >= 4 && matrix <= 8))
+            colr->matrix_index            = (matrix == 1 || (matrix >= 4 && matrix <= 9))
                                           ? matrix : ISOM_MATRIX_INDEX_UNSPECIFIED;
             colr->full_range_flag         = summary->color.full_range;
         }
