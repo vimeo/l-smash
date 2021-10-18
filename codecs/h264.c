@@ -226,7 +226,7 @@ uint64_t h264_find_next_start_code
                         distance = lsmash_bs_get_remaining_buffer_size( bs ) + 3;
                         break;
                     }
-                    till_end = lsmash_bs_get_remaining_buffer_size( bs );
+                    till_end = lsmash_bs_get_remaining_buffer_size( bs ) - distance;
                     nal_data = lsmash_bs_get_buffer_data_start( bs );
                     nal_pos  = lsmash_bs_get_pos( bs ) + distance;
                 }
