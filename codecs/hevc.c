@@ -2988,6 +2988,7 @@ int hevc_construct_specific_parameters
         temp8 = lsmash_bs_get_byte( bs );
         param_array.array_completeness = (temp8 >> 7) & 0x01;
         param_array.NAL_unit_type      =  temp8       & 0x3F;
+        lsmash_list_init(param_array.list, isom_remove_dcr_ps);
         param_array.list->entry_count  = lsmash_bs_get_be16( bs );
         if( param_array.NAL_unit_type == HEVC_NALU_TYPE_VPS
          || param_array.NAL_unit_type == HEVC_NALU_TYPE_SPS
