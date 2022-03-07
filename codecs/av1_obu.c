@@ -24,7 +24,7 @@
 
 #include <string.h>
 
-#include <obuparse.h>
+#include "obuparse/obuparse.h"
 
 #include "codecs/av1.h"
 #include "codecs/av1_obu.h"

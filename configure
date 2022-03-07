@@ -116,7 +116,7 @@ TOOLS=""
 CFLAGS="-Wshadow -Wall -std=c99 -pedantic -I. -I$SRCDIR"
 LDFLAGS="-L."
 SO_LDFLAGS='-shared -Wl,-soname,$@ -Wl,--version-script,liblsmash.ver'
-LIBS="-lm -lobuparse"
+LIBS="-lm"
 
 for opt; do
     optarg="${opt#*=}"
@@ -311,6 +311,9 @@ SRC_COMMON="   \
     osdep.c    \
     utils.c"
 
+SRC_OBUPARSE=" \
+    obuparse.c"
+
 SRC_CODECS="      \
     a52.c         \
     alac.c        \
@@ -363,6 +366,10 @@ SRCS=""
 
 for src in $SRC_COMMON; do
     SRCS="$SRCS common/$src"
+done
+
+for src in $SRC_OBUPARSE; do
+    SRCS="$SRCS obuparse/$src"
 done
 
 for src in $SRC_CODECS; do

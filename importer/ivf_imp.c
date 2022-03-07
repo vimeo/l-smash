@@ -25,7 +25,7 @@
 
 #include <string.h>
 
-#include <obuparse.h>
+#include "obuparse/obuparse.h"
 
 #define LSMASH_IMPORTER_INTERNAL
 #include "importer.h"
