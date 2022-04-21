@@ -88,6 +88,7 @@ typedef struct
     int      sbr;
     int      user_fps;
     int      has_dv;
+    int      has_cd;
     uint8_t  dv_profile;
     uint8_t  dv_bl_signal_compatibility_id;
     int      has_spatial_audio;
@@ -95,6 +96,7 @@ typedef struct
     uint32_t fps_num;
     uint32_t fps_den;
     uint32_t encoder_delay;
+    uint32_t constant_delay;
     int16_t  alternate_group;
     uint16_t ISO_language;
     uint16_t copyright_language;
@@ -141,6 +143,7 @@ typedef struct
     uint32_t          sample_entry;
     uint32_t          current_sample_number;
     uint32_t          ctd_shift;
+    uint32_t          cd_shift;
     uint32_t          priming_samples;
     uint32_t          last_delta;
     uint64_t          prev_dts;
@@ -279,6 +282,7 @@ static void display_help( void )
              "    language=<string>         Specify media language\n"
              "    alternate-group=<integer> Specify alternate group\n"
              "    encoder-delay=<integer>   Represent audio encoder delay (priming samples) explicitly\n"
+             "    constant-delay=<integer>  Force a constant composition time delay (in frames).\n"
              "    copyright=<arg>           Specify copyright notice with or without language (latter string)\n"
              "                                  <arg> is <string> or <string>/<string>\n"
              "    handler=<string>          Set media handler name\n"
@@ -663,6 +667,12 @@ static int parse_track_options( input_t *input )
             {
                 char *track_parameter = strchr( track_option, '=' ) + 1;
                 track_opt->encoder_delay = atoi( track_parameter );
+            }
+            else if ( strstr( track_option, "constant-delay=" ) )
+            {
+                char *track_parameter = strchr( track_option, '=' ) + 1;
+                track_opt->constant_delay = atoi( track_parameter );
+                track_opt->has_cd         = 1;
             }
             else if( strstr( track_option, "language=" ) )
             {
@@ -1251,6 +1261,19 @@ static int do_mux( muxer_t *muxer )
                         if( out_track->current_sample_number == 0 )
                             out_track->ctd_shift = sample->cts;
                         sample->cts -= out_track->ctd_shift;
+                    }
+                    input_track_t *in_track = &input->track[input->current_track_number - 1];
+                    if( in_track->opt.has_cd ) {
+                        if( out_track->current_sample_number == 0 )
+                        {
+                            if( (in_track->opt.constant_delay * out_track->timebase) < sample->cts )
+                            {
+                                mux_ret = LSMASH_ERR_INVALID_DATA;
+                                ERROR_MSG( "constant delay must be greater than or equal to first CTS.\n" );
+                            }
+                            out_track->cd_shift = (in_track->opt.constant_delay * out_track->timebase) - sample->cts;
+                        }
+                        sample->cts += out_track->cd_shift;
                     }
                     out_track->dts = (double)sample->dts / out_track->timescale;
                     out_track->sample = sample;
