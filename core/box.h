@@ -796,6 +796,20 @@ typedef struct
     isom_channel_description_t *channelDescriptions;
 } isom_chan_t;
 
+/* Spatial Audio Box */
+typedef struct
+{
+    ISOM_BASEBOX_COMMON;
+    uint8_t version;
+    uint8_t head_locked_stereo : 1;
+    uint8_t ambisonic_type : 7;
+    uint32_t ambisonic_order;
+    uint8_t ambisonic_channel_ordering;
+    uint8_t ambisonic_normalization;
+    uint32_t num_channels;
+    lsmash_entry_list_t channel_map; /* list of uint32_t channel indexes */
+} isom_SA3D_t;
+
 /* Sampling Rate Box
  * This box may be present only in an AudioSampleEntryV1, and when present,
  * it overrides the samplerate field and documents the actual sampling rate.
@@ -2128,6 +2142,7 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_ISOM_PASP (LSMASH_BOX_PRECEDENCE_LP -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_STSL (LSMASH_BOX_PRECEDENCE_N  -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_CHAN (LSMASH_BOX_PRECEDENCE_LP -  0 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_SA3D (LSMASH_BOX_PRECEDENCE_HM - 1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_QTFF_CHAN (LSMASH_BOX_PRECEDENCE_LP -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_QTFF_WAVE (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_QTFF_FRMA (LSMASH_BOX_PRECEDENCE_HM +  1 * LSMASH_BOX_PRECEDENCE_S)   /* precede any as much as possible */
@@ -2621,6 +2636,7 @@ isom_mp4a_t *isom_add_mp4a( isom_wave_t *wave );
 isom_terminator_t *isom_add_terminator( isom_wave_t *wave );
 isom_chan_t *isom_add_chan( isom_audio_entry_t *audio );
 isom_srat_t *isom_add_srat( isom_audio_entry_t *audio );
+isom_SA3D_t *isom_add_SA3D( isom_audio_entry_t *audio );
 isom_ftab_t *isom_add_ftab( isom_tx3g_entry_t *tx3g );
 isom_stts_t *isom_add_stts( isom_stbl_t *stbl );
 isom_ctts_t *isom_add_ctts( isom_stbl_t *stbl );

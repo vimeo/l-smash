@@ -47,7 +47,7 @@ extern "C" {
  * Version
  ****************************************************************************/
 #define LSMASH_VERSION_MAJOR  2
-#define LSMASH_VERSION_MINOR 17
+#define LSMASH_VERSION_MINOR 18
 #define LSMASH_VERSION_MICRO  0
 
 #define LSMASH_VERSION_INT( a, b, c ) (((a) << 16) | ((b) << 8) | (c))
@@ -930,6 +930,7 @@ typedef enum
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_EC_3,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_DTS,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC,
+    LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D,
 
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI,
 
@@ -1187,6 +1188,39 @@ typedef enum
     MP4A_AAC_SBR_BACKWARD_COMPATIBLE,   /* explicitly signals SBR present. Recommended method to signal SBR. */
     MP4A_AAC_SBR_HIERARCHICAL           /* SBR exists. SBR dedicated method. */
 } lsmash_mp4a_aac_sbr_mode;
+
+/****************************************************************************
+ * Spatial Audio (SA3D) definitions. See Spatial Audio RFC:
+ * https://github.com/google/spatial-media/blob/master/docs/spatial-audio-rfc.md
+ ****************************************************************************/
+typedef enum
+{
+    SA3D_AMBISONIC_TYPE_PERIPHONIC = 0
+} lsmash_SA3D_AmbisonicType;
+
+typedef enum
+{
+    SA3D_AMBISONIC_CHANNEL_ORDERING_ACN = 0
+} lsmash_SA3D_AmbisonicChannelOrdering;
+
+typedef enum
+{
+    SA3D_AMBISONIC_NORMALIZATION_SN3D = 0
+} lsmash_SA3D_AmbisonicNormalization;
+
+typedef struct
+{
+    uint8_t version; /* Only version 0 is currently supported. */
+    lsmash_boolean_t head_locked_stereo;
+    lsmash_SA3D_AmbisonicType ambisonic_type;
+    uint32_t ambisonic_order;
+    lsmash_SA3D_AmbisonicChannelOrdering ambisonic_channel_ordering;
+    lsmash_SA3D_AmbisonicNormalization ambisonic_normalization;
+    uint32_t num_channels;
+    uint32_t channel_map[256]; /* While technically up to 0xFFFFFFFF channels can be mapped,
+                                * 256 is sufficient to encode up to 15th order ambisonics,
+                                * which is far more than needed for practical uses. */
+} lsmash_SA3D_t;
 
 typedef struct
 {

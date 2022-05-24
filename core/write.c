@@ -782,6 +782,28 @@ static int isom_write_tx3g_description( lsmash_bs_t *bs, isom_box_t *box )
     return 0;
 }
 
+static int isom_write_SA3D( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_SA3D_t *SA3D = (isom_SA3D_t *)box;
+
+    isom_bs_put_box_common( bs, SA3D );
+    lsmash_bs_put_byte( bs, SA3D->version );
+    lsmash_bs_put_byte( bs, (SA3D->head_locked_stereo << 7) | SA3D->ambisonic_type );
+    lsmash_bs_put_be32( bs, SA3D->ambisonic_order );
+    lsmash_bs_put_byte( bs, SA3D->ambisonic_channel_ordering );
+    lsmash_bs_put_byte( bs, SA3D->ambisonic_normalization );
+    lsmash_bs_put_be32( bs, SA3D->num_channels );
+    for( lsmash_entry_t *entry = SA3D->channel_map.head; entry; entry = entry->next )
+    {
+        uint32_t *data = (uint32_t *)entry->data;
+        if( !data )
+            return LSMASH_ERR_NAMELESS;
+        lsmash_bs_put_be32( bs, *data );
+    }
+
+    return 0;
+}
+
 static int isom_write_stsd( lsmash_bs_t *bs, isom_box_t *box )
 {
     isom_stsd_t *stsd = (isom_stsd_t *)box;
@@ -1695,6 +1717,7 @@ void isom_set_box_writer( isom_box_t *box )
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_DREF, isom_write_dref );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_URL,  isom_write_url  );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_STBL, isom_write_stbl );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_SA3D, isom_write_SA3D );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_STSD, isom_write_stsd );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, isom_write_dovi );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, isom_write_dovi );
