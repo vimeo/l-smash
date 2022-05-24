@@ -870,9 +870,9 @@ typedef struct
 } isom_audio_entry_t;
 
 /* Hint Sample Entry data field for
- * rtp hint track, 
+ * rtp hint track,
  * srtp hint track,
- * rtp reception hint track and 
+ * rtp reception hint track and
  * srtp reception hint track
  * rtcp reception hint track
  * srtcp reception hint track

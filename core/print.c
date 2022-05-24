@@ -2512,7 +2512,7 @@ static isom_print_box_t isom_select_print_func( isom_box_t *box )
         ADD_PRINT_BOX_TABLE_ELEMENT(   QT_BOX_TYPE_TEXT, isom_print_text );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_DINF, isom_print_dinf );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_DREF, isom_print_dref );
-        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_URL,  isom_print_url );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_URL,  isom_print_url  );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_STBL, isom_print_stbl );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_STSD, isom_print_stsd );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_CLAP, isom_print_clap );
