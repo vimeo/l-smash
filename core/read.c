@@ -893,6 +893,36 @@ static int isom_read_stbl( lsmash_file_t *file, isom_box_t *box, isom_box_t *par
     return isom_read_children( file, box, stbl, level );
 }
 
+static int isom_read_SA3D( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, int level )
+{
+    ADD_BOX( SA3D, isom_audio_entry_t );
+    lsmash_bs_t *bs = file->bs;
+
+    SA3D->version                    = lsmash_bs_get_byte( bs );
+    uint8_t temp8                    = lsmash_bs_get_byte( bs );
+    SA3D->head_locked_stereo         = (temp8 >> 7) & 1;
+    SA3D->ambisonic_type             = temp8 & 0x7F;
+    SA3D->ambisonic_order            = lsmash_bs_get_be32( bs );
+    SA3D->ambisonic_channel_ordering = lsmash_bs_get_byte( bs );
+    SA3D->ambisonic_normalization    = lsmash_bs_get_byte( bs );
+    SA3D->num_channels               = lsmash_bs_get_be32( bs );
+
+    for( uint64_t pos = lsmash_bs_count( bs ); pos < box->size && SA3D->channel_map.entry_count < SA3D->num_channels; pos = lsmash_bs_count( bs ) )
+    {
+        uint32_t *data = lsmash_malloc( sizeof(uint32_t) );
+        if( !data )
+            return LSMASH_ERR_MEMORY_ALLOC;
+        if( lsmash_list_add_entry( &SA3D->channel_map, data ) < 0 )
+        {
+            lsmash_free( data );
+            return LSMASH_ERR_MEMORY_ALLOC;
+        }
+        *data = lsmash_bs_get_be32( bs );
+    }
+
+    return isom_read_leaf_box_common_last_process( file, box, level, SA3D );
+}
+
 static int isom_read_stsd( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, int level )
 {
     if( !lsmash_check_box_type_identical( parent->type, ISOM_BOX_TYPE_STBL )
@@ -2941,7 +2971,7 @@ int isom_read_box( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, uin
             lsmash_compact_box_type_t fourcc;
             lsmash_box_type_t (*form_box_type_func)( lsmash_compact_box_type_t );
             int (*reader_func)( lsmash_file_t *, isom_box_t *, isom_box_t *, int );
-        } extension_reader_table[33] = { { 0, NULL, NULL } };
+        } extension_reader_table[64] = { { 0, NULL, NULL } };
         if( !extension_reader_table[0].reader_func )
         {
             /* Initialize the table. */
@@ -2957,6 +2987,7 @@ int isom_read_box( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, uin
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_DOPS, lsmash_form_iso_box_type,  isom_read_codec_specific );
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_SRAT, lsmash_form_iso_box_type,  isom_read_srat );
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_WFEX, lsmash_form_iso_box_type,  isom_read_codec_specific );
+            ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_SA3D, lsmash_form_iso_box_type,  isom_read_SA3D );
             ADD_EXTENSION_READER_TABLE_ELEMENT(   QT_BOX_TYPE_CHAN, lsmash_form_qtff_box_type, isom_read_chan );
             ADD_EXTENSION_READER_TABLE_ELEMENT(   QT_BOX_TYPE_WAVE, lsmash_form_qtff_box_type, isom_read_wave );
             /* Video */

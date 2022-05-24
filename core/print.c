@@ -783,6 +783,27 @@ static int isom_print_stbl( FILE *fp, lsmash_file_t *file, isom_box_t *box, int 
     return isom_print_simple( fp, box, level, "Sample Table Box" );
 }
 
+static int isom_print_SA3D( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_SA3D_t *SA3D = (isom_SA3D_t *)box;
+    int indent = level;
+    int i = 0;
+    isom_print_box_common( fp, indent++, box, "Spatial Audio Box" );
+    lsmash_ifprintf( fp, indent, "version = %"PRIu8"\n", SA3D->version );
+    lsmash_ifprintf( fp, indent, "head_locked_stereo = %"PRIu8"\n", SA3D->head_locked_stereo );
+    lsmash_ifprintf( fp, indent, "ambisonic_type = %"PRIu8"\n", SA3D->ambisonic_type );
+    lsmash_ifprintf( fp, indent, "ambisonic_order = %"PRIu32"\n", SA3D->ambisonic_order );
+    lsmash_ifprintf( fp, indent, "ambisonic_channel_ordering = %"PRIu8"\n", SA3D->ambisonic_channel_ordering );
+    lsmash_ifprintf( fp, indent, "ambisonic_normalization = %"PRIu8"\n", SA3D->ambisonic_normalization );
+    lsmash_ifprintf( fp, indent, "num_channels = %"PRIu32"\n", SA3D->num_channels );
+    for( lsmash_entry_t *entry = SA3D->channel_map.head; entry; entry = entry->next )
+    {
+        uint32_t *data = (uint32_t *)entry->data;
+        lsmash_ifprintf( fp, indent, "channel_map[%"PRIu32"] = %"PRIu32"\n", i++, *data );
+    }
+    return 0;
+}
+
 static int isom_print_stsd( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
 {
     isom_stsd_t *stsd = (isom_stsd_t *)box;
@@ -1333,7 +1354,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
     {
         lsmash_box_type_t type;
         int (*print_func)( FILE *, lsmash_file_t *, isom_box_t *, int );
-    } print_description_extension_table[33] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
+    } print_description_extension_table[64] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
     if( !print_description_extension_table[0].print_func )
     {
         /* Initialize the table. */
@@ -1369,6 +1390,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_DOPS, opus_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_ALAC, alac_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_WFEX, wma_print_codec_specific );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_SA3D, isom_print_SA3D );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_FTAB, isom_print_ftab );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT(   QT_BOX_TYPE_ESDS, mp4sys_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT(   QT_BOX_TYPE_ALAC, alac_print_codec_specific );

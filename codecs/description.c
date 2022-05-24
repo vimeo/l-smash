@@ -252,6 +252,10 @@ static int isom_initialize_structured_codec_specific_data( lsmash_codec_specific
             specific->size     = sizeof(lsmash_alac_specific_parameters_t);
             specific->destruct = lsmash_free;
             break;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D :
+            specific->size     = sizeof(lsmash_SA3D_t);
+            specific->destruct = lsmash_free;
+            break;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
             specific->size     = sizeof(lsmash_hevc_dovi_t);
             specific->destruct = lsmash_free;
@@ -404,6 +408,9 @@ static int isom_duplicate_structured_specific_data( lsmash_codec_specific_t *dst
             return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC :
             *(lsmash_alac_specific_parameters_t *)dst_data = *(lsmash_alac_specific_parameters_t *)src_data;
+            return 0;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D :
+            *(lsmash_SA3D_t *)dst_data = *(lsmash_SA3D_t *)src_data;
             return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
              *(lsmash_hevc_dovi_t *)dst_data = *(lsmash_hevc_dovi_t *)src_data;
@@ -1715,6 +1722,7 @@ static lsmash_box_type_t isom_guess_audio_codec_specific_box_type( lsmash_codec_
     GUESS_AUDIO_CODEC_SPECIFIC_BOX_TYPE(   QT_CODEC_TYPE_ADPCM2_AUDIO,  QT_CODEC_TYPE_ADPCM2_AUDIO );
     GUESS_AUDIO_CODEC_SPECIFIC_BOX_TYPE(   QT_CODEC_TYPE_ADPCM17_AUDIO, QT_CODEC_TYPE_ADPCM17_AUDIO );
     GUESS_AUDIO_CODEC_SPECIFIC_BOX_TYPE(   QT_CODEC_TYPE_GSM49_AUDIO,   QT_CODEC_TYPE_GSM49_AUDIO );
+    GUESS_AUDIO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_SA3D );
     GUESS_AUDIO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, QT_BOX_TYPE_CHAN );
     GUESS_AUDIO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, QT_BOX_TYPE_GLBL );
     GUESS_AUDIO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, QT_BOX_TYPE_WAVE );
@@ -2343,6 +2351,41 @@ static int isom_setup_audio_description( isom_stsd_t *stsd, lsmash_audio_summary
             case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC :
                 if( file->qt_compatible )
                     continue;  /* shall be set up already */
+            case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D :
+            {
+                lsmash_codec_specific_t *cs = lsmash_convert_codec_specific_format( specific, LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if ( !cs )
+                    goto fail;
+
+                lsmash_SA3D_t *data = (lsmash_SA3D_t *)cs->data.structured;
+                isom_SA3D_t *SA3D = isom_add_SA3D( audio );
+                if( LSMASH_IS_NON_EXISTING_BOX( SA3D ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+
+                SA3D->version                    = data->version;
+                SA3D->head_locked_stereo         = (uint8_t)data->head_locked_stereo;
+                SA3D->ambisonic_type             = (uint8_t)data->ambisonic_type;
+                SA3D->ambisonic_order            = data->ambisonic_order;
+                SA3D->ambisonic_channel_ordering = (uint8_t)data->ambisonic_channel_ordering;
+                SA3D->ambisonic_normalization    = (uint8_t)data->ambisonic_normalization;
+                SA3D->num_channels               = data->num_channels;
+                for( int i = 0; i < data->num_channels; i++ )
+                {
+                    uint32_t *value = (uint32_t *)lsmash_malloc( sizeof( uint32_t ) );
+                    *value = data->channel_map[i];
+                    if( lsmash_list_add_entry( &SA3D->channel_map, (void *)value ) < 0 )
+                    {
+                        lsmash_free( value );
+                        goto fail;
+                    }
+                }
+
+                lsmash_destroy_codec_specific_data( cs );
+                break;
+            }
             default :
             {
                 lsmash_codec_specific_t *cs = lsmash_convert_codec_specific_format( specific, LSMASH_CODEC_SPECIFIC_FORMAT_UNSTRUCTURED );
@@ -2514,7 +2557,7 @@ static lsmash_codec_specific_data_type isom_get_codec_specific_data_type( lsmash
     {
         lsmash_compact_box_type_t       extension_fourcc;
         lsmash_codec_specific_data_type data_type;
-    } codec_specific_data_type_table[33] = { { 0, LSMASH_CODEC_SPECIFIC_DATA_TYPE_UNKNOWN } };
+    } codec_specific_data_type_table[64] = { { 0, LSMASH_CODEC_SPECIFIC_DATA_TYPE_UNKNOWN } };
     if( codec_specific_data_type_table[0].data_type == LSMASH_CODEC_SPECIFIC_DATA_TYPE_UNKNOWN )
     {
         int i = 0;
@@ -2529,6 +2572,7 @@ static lsmash_codec_specific_data_type isom_get_codec_specific_data_type( lsmash
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DDTS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_DTS );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DOPS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_OPUS );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ALAC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_SA3D, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ESDS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_MP4SYS_DECODER_CONFIG );
@@ -3017,6 +3061,36 @@ lsmash_summary_t *isom_create_audio_summary_from_description( isom_sample_entry_
             {
                 isom_srat_t *srat = (isom_srat_t *)box;
                 actual_sampling_rate = srat->sampling_rate;
+            }
+            else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_SA3D ) )
+            {
+                lsmash_codec_specific_t *specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D,
+                                                                                       LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !specific )
+                    goto fail;
+
+                int i = 0;
+                isom_SA3D_t *SA3D = (isom_SA3D_t *)box;
+                lsmash_SA3D_t *data = (lsmash_SA3D_t *)specific->data.structured;
+
+                data->version                    = SA3D->version;
+                data->head_locked_stereo         = (lsmash_boolean_t)SA3D->head_locked_stereo;
+                data->ambisonic_type             = (lsmash_SA3D_AmbisonicType)SA3D->ambisonic_type;
+                data->ambisonic_order            = SA3D->ambisonic_order;
+                data->ambisonic_channel_ordering = (lsmash_SA3D_AmbisonicChannelOrdering)SA3D->ambisonic_channel_ordering;
+                data->ambisonic_normalization    = (lsmash_SA3D_AmbisonicNormalization)SA3D->ambisonic_normalization;
+                data->num_channels               = SA3D->num_channels;
+                for( lsmash_entry_t *SA3D_entry = SA3D->channel_map.head; SA3D_entry && i < 256; SA3D_entry = SA3D_entry->next )
+                {
+                    uint32_t *value = (uint32_t *)SA3D_entry->data;
+                    data->channel_map[i++] = *value;
+                }
+
+                if( lsmash_list_add_entry( &summary->opaque->list, specific ) < 0 )
+                {
+                    lsmash_destroy_codec_specific_data( specific );
+                    goto fail;
+                }
             }
             else if( lsmash_check_box_type_identical( box->type, QT_BOX_TYPE_WAVE ) )
             {
