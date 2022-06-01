@@ -90,6 +90,8 @@ typedef struct
     int      has_dv;
     uint8_t  dv_profile;
     uint8_t  dv_bl_signal_compatibility_id;
+    int      has_spatial_audio;
+    int      ambisonic_order;
     uint32_t fps_num;
     uint32_t fps_den;
     uint32_t encoder_delay;
@@ -271,6 +273,7 @@ static void display_help( void )
              "Track options:\n"
              "    disable                   Disable this track\n"
              "    dv-profile=<arg>          Specify Dolby Vision profile\n"
+             "    ambisonic-order=<integer> Specify ambisonic order for a spatial audio track\n"
              "    fps=<arg>                 Specify video framerate\n"
              "                                  <arg> is <integer> or <integer>/<integer>\n"
              "    language=<string>         Specify media language\n"
@@ -676,6 +679,12 @@ static int parse_track_options( input_t *input )
                 }
                 track_opt->has_dv = 1;
             }
+            else if( strstr( track_option, "ambisonic-order=" ) )
+            {
+                char *track_parameter = strchr( track_option, '=' ) + 1;
+                track_opt->ambisonic_order = atoi( track_parameter );
+                track_opt->has_spatial_audio = 1;
+            }
             else if( strstr( track_option, "fps=" ) )
             {
                 char *track_parameter = strchr( track_option, '=' ) + 1;
@@ -1068,6 +1077,35 @@ static int prepare_output( muxer_t *muxer )
                         summary->sbr_mode = MP4A_AAC_SBR_BACKWARD_COMPATIBLE;
                         if( lsmash_setup_AudioSpecificConfig( summary ) )
                             return ERROR_MSG( "failed to set SBR mode.\n" );
+                    }
+                    if( track_opt->has_spatial_audio )
+                    {
+                        if( track_opt->ambisonic_order < 0 )
+                            return ERROR_MSG( "ambisonic order must be a positive integer\n" );
+                        uint32_t ambisonic_channels = (track_opt->ambisonic_order + 1) * (track_opt->ambisonic_order + 1);
+                        if( ambisonic_channels != summary->channels )
+                            return ERROR_MSG( "ambisonic order's expected channel count does not match actual channel count\n" );
+
+                        lsmash_codec_specific_t *SA3D = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D,
+                                                                                           LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                        if( !SA3D )
+                            return ERROR_MSG( "failed to allocate Spatial Audio Box" );
+
+                        lsmash_SA3D_t *data = (lsmash_SA3D_t *)SA3D->data.structured;
+                        data->version                    = 0;
+                        data->head_locked_stereo         = LSMASH_BOOLEAN_FALSE;
+                        data->ambisonic_type             = SA3D_AMBISONIC_TYPE_PERIPHONIC;
+                        data->ambisonic_order            = (uint32_t)track_opt->ambisonic_order;
+                        data->ambisonic_channel_ordering = SA3D_AMBISONIC_CHANNEL_ORDERING_ACN;
+                        data->ambisonic_normalization    = SA3D_AMBISONIC_NORMALIZATION_SN3D;
+                        data->num_channels               = ambisonic_channels;
+                        for( int i = 0; i < ambisonic_channels; i++ )
+                        {
+                            data->channel_map[i] = i;
+                        }
+
+                        lsmash_add_codec_specific_data( in_track->summary, SA3D );
+                        lsmash_destroy_codec_specific_data( SA3D );
                     }
                     media_param.timescale          = summary->frequency;
                     media_param.media_handler_name = track_opt->handler_name ? track_opt->handler_name : "L-SMASH Audio Handler";
