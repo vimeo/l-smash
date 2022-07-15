@@ -93,6 +93,8 @@ typedef struct
     uint8_t  dv_bl_signal_compatibility_id;
     int      has_spatial_audio;
     int      ambisonic_order;
+    int      has_stereo_mode;
+    char    *stereo_mode;
     uint32_t fps_num;
     uint32_t fps_den;
     uint32_t encoder_delay;
@@ -277,6 +279,7 @@ static void display_help( void )
              "    disable                   Disable this track\n"
              "    dv-profile=<arg>          Specify Dolby Vision profile\n"
              "    ambisonic-order=<integer> Specify ambisonic order for a spatial audio track\n"
+             "    stereo-mode=<string>      Specify stereoscopic 3D mode on the video track\n"
              "    fps=<arg>                 Specify video framerate\n"
              "                                  <arg> is <integer> or <integer>/<integer>\n"
              "    language=<string>         Specify media language\n"
@@ -695,6 +698,12 @@ static int parse_track_options( input_t *input )
                 track_opt->ambisonic_order = atoi( track_parameter );
                 track_opt->has_spatial_audio = 1;
             }
+            else if( strstr( track_option, "stereo-mode=" ) )
+            {
+                char *track_parameter = strchr( track_option, '=' ) + 1;
+                track_opt->stereo_mode = track_parameter;
+                track_opt->has_stereo_mode = 1;
+            }
             else if( strstr( track_option, "fps=" ) )
             {
                 char *track_parameter = strchr( track_option, '=' ) + 1;
@@ -1065,6 +1074,30 @@ static int prepare_output( muxer_t *muxer )
                         lsmash_add_codec_specific_data( in_track->summary, dovi );
                         lsmash_destroy_codec_specific_data( dovi );
                     }
+                    if( track_opt->has_stereo_mode )
+                    {
+                        lsmash_codec_specific_t *st3d = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D,
+                                                                                           LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                        if( !st3d )
+                            return ERROR_MSG( "failed to allocate Stereoscopic 3D Video Box" );
+
+                        lsmash_st3d_t *data = (lsmash_st3d_t *)st3d->data.structured;
+                        if( !strcasecmp( track_opt->stereo_mode, "monoscopic" ))
+                            data->stereo_mode = 0;
+                        else if( !strcasecmp( track_opt->stereo_mode, "top-bottom" ))
+                            data->stereo_mode = 1;
+                        else if( !strcasecmp( track_opt->stereo_mode, "left-right" ))
+                            data->stereo_mode = 2;
+                        else if( !strcasecmp( track_opt->stereo_mode, "custom" ))
+                            data->stereo_mode = 3;
+                        else if( !strcasecmp( track_opt->stereo_mode, "right-left" ))
+                            data->stereo_mode = 4;
+
+
+                        lsmash_add_codec_specific_data( in_track->summary, st3d );
+                        lsmash_destroy_codec_specific_data( st3d );
+                    }
+
                     media_param.timescale          = timescale;
                     media_param.media_handler_name = track_opt->handler_name ? track_opt->handler_name : "L-SMASH Video Handler";
                     media_param.roll_grouping      = 1;

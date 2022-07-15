@@ -256,6 +256,10 @@ static int isom_initialize_structured_codec_specific_data( lsmash_codec_specific
             specific->size     = sizeof(lsmash_SA3D_t);
             specific->destruct = lsmash_free;
             break;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D:
+            specific->size     = sizeof(lsmash_st3d_t);
+            specific->destruct = lsmash_free;
+            break;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
             specific->size     = sizeof(lsmash_hevc_dovi_t);
             specific->destruct = lsmash_free;
@@ -411,6 +415,9 @@ static int isom_duplicate_structured_specific_data( lsmash_codec_specific_t *dst
             return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D :
             *(lsmash_SA3D_t *)dst_data = *(lsmash_SA3D_t *)src_data;
+            return 0;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D :
+            *(lsmash_st3d_t *)dst_data = *(lsmash_st3d_t *)src_data;
             return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
              *(lsmash_hevc_dovi_t *)dst_data = *(lsmash_hevc_dovi_t *)src_data;
@@ -921,6 +928,7 @@ static lsmash_box_type_t isom_guess_video_codec_specific_box_type( lsmash_codec_
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( ISOM_CODEC_TYPE_VC_1_VIDEO,    ISOM_BOX_TYPE_DVC1 );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( ISOM_CODEC_TYPE_MP4V_VIDEO,    ISOM_BOX_TYPE_ESDS );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_BTRT );
+    GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_ST3D );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_DVCC );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_DVVC );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED,   QT_BOX_TYPE_FIEL );
@@ -1058,6 +1066,23 @@ static int isom_setup_visual_description( isom_stsd_t *stsd, lsmash_video_summar
                 dovi->reserved2[1]                  = data->reserved2[1];
                 dovi->reserved2[2]                  = data->reserved2[2];
                 dovi->reserved2[3]                  = data->reserved2[3];
+                lsmash_destroy_codec_specific_data( cs );
+                break;
+            }
+            case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D :
+            {
+                lsmash_codec_specific_t *cs = lsmash_convert_codec_specific_format( specific, LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !cs )
+                    goto fail;
+                lsmash_st3d_t *data = (lsmash_st3d_t *)cs->data.structured;
+                isom_st3d_t *st3d = isom_add_st3d( visual );
+                if( LSMASH_IS_NON_EXISTING_BOX( st3d ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+
+                st3d->stereo_mode = data->stereo_mode;
                 lsmash_destroy_codec_specific_data( cs );
                 break;
             }
@@ -2573,6 +2598,7 @@ static lsmash_codec_specific_data_type isom_get_codec_specific_data_type( lsmash
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DOPS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_OPUS );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ALAC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_SA3D, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ST3D, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ESDS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_MP4SYS_DECODER_CONFIG );
