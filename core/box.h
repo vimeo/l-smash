@@ -810,6 +810,13 @@ typedef struct
     lsmash_entry_list_t channel_map; /* list of uint32_t channel indexes */
 } isom_SA3D_t;
 
+/* Stereoscopic 3D Video Box */
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
+    uint8_t stereo_mode;
+} isom_st3d_t;
+
 /* Sampling Rate Box
  * This box may be present only in an AudioSampleEntryV1, and when present,
  * it overrides the samplerate field and documents the actual sampling rate.
@@ -2126,6 +2133,7 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_ISOM_ESDS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_QTFF_ESDS (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)   /* preceded by 'frma' and 'mp4a' */
 #define LSMASH_BOX_PRECEDENCE_ISOM_DOVI (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_ST3D (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_BTRT (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TIMS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TSRO (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
@@ -2637,6 +2645,7 @@ isom_terminator_t *isom_add_terminator( isom_wave_t *wave );
 isom_chan_t *isom_add_chan( isom_audio_entry_t *audio );
 isom_srat_t *isom_add_srat( isom_audio_entry_t *audio );
 isom_SA3D_t *isom_add_SA3D( isom_audio_entry_t *audio );
+isom_st3d_t *isom_add_st3d( isom_visual_entry_t *visual );
 isom_ftab_t *isom_add_ftab( isom_tx3g_entry_t *tx3g );
 isom_stts_t *isom_add_stts( isom_stbl_t *stbl );
 isom_ctts_t *isom_add_ctts( isom_stbl_t *stbl );

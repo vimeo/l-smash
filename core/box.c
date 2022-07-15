@@ -161,7 +161,7 @@ int isom_is_fullbox( const void *box )
 {
     const isom_box_t *current = (const isom_box_t *)box;
     lsmash_box_type_t type = current->type;
-    static lsmash_box_type_t fullbox_type_table[50] = { LSMASH_BOX_TYPE_INITIALIZER };
+    static lsmash_box_type_t fullbox_type_table[51] = { LSMASH_BOX_TYPE_INITIALIZER };
     if( !lsmash_check_box_type_specified( &fullbox_type_table[0] ) )
     {
         /* Initialize the table. */
@@ -214,6 +214,7 @@ int isom_is_fullbox( const void *box )
         fullbox_type_table[i++] = ISOM_BOX_TYPE_TRUN;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_TFRA;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_MFRO;
+        fullbox_type_table[i++] = ISOM_BOX_TYPE_ST3D;
         fullbox_type_table[i]   = LSMASH_BOX_TYPE_UNSPECIFIED;
     }
     for( int i = 0; lsmash_check_box_type_specified( &fullbox_type_table[i] ); i++ )
@@ -1496,6 +1497,7 @@ DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_sgbt, sgbt, visual,   QT_BOX_TYPE
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_stsl, stsl, visual, ISOM_BOX_TYPE_STSL, LSMASH_BOX_PRECEDENCE_ISOM_STSL, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_btrt, btrt, visual, ISOM_BOX_TYPE_BTRT, LSMASH_BOX_PRECEDENCE_ISOM_BTRT, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_dovi, dovi, visual, ISOM_BOX_TYPE_DVVC, LSMASH_BOX_PRECEDENCE_ISOM_DOVI, 0, isom_visual_entry_t ) // DVVC is just a placeholder
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_st3d, st3d, visual, ISOM_BOX_TYPE_ST3D, LSMASH_BOX_PRECEDENCE_ISOM_ST3D, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_wave, wave, audio,    QT_BOX_TYPE_WAVE, LSMASH_BOX_PRECEDENCE_QTFF_WAVE, 0, isom_audio_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_chan, chan, audio,    QT_BOX_TYPE_CHAN, LSMASH_BOX_PRECEDENCE_QTFF_CHAN, 1, isom_audio_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_srat, srat, audio,  ISOM_BOX_TYPE_SRAT, LSMASH_BOX_PRECEDENCE_ISOM_SRAT, 0, isom_audio_entry_t )

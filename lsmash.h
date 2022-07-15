@@ -47,7 +47,7 @@ extern "C" {
  * Version
  ****************************************************************************/
 #define LSMASH_VERSION_MAJOR  2
-#define LSMASH_VERSION_MINOR 18
+#define LSMASH_VERSION_MINOR 19
 #define LSMASH_VERSION_MICRO  0
 
 #define LSMASH_VERSION_INT( a, b, c ) (((a) << 16) | ((b) << 8) | (c))
@@ -931,6 +931,7 @@ typedef enum
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_DTS,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D,
+    LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D,
 
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI,
 
@@ -1188,6 +1189,24 @@ typedef enum
     MP4A_AAC_SBR_BACKWARD_COMPATIBLE,   /* explicitly signals SBR present. Recommended method to signal SBR. */
     MP4A_AAC_SBR_HIERARCHICAL           /* SBR exists. SBR dedicated method. */
 } lsmash_mp4a_aac_sbr_mode;
+
+/****************************************************************************
+ * Stereoscopic 3D Video (st3d) definitions. See Spatial Video RFC v2:
+ * https://github.com/google/spatial-media/blob/master/docs/spherical-video-v2-rfc.md
+ ****************************************************************************/
+typedef enum
+{
+    ST3D_STEREO_MODE_MONOSCOPIC = 0,
+    ST3D_STEREO_MODE_TOP_BOTTOM = 1,
+    ST3D_STEREO_MODE_LEFT_RIGHT = 2,
+    ST3D_STEREO_MODE_CUSTOM     = 3,
+    ST3D_STEREO_MODE_RIGHT_LEFT = 4,
+} lsmash_st3d_StereoMode;
+
+typedef struct
+{
+    lsmash_st3d_StereoMode stereo_mode;
+} lsmash_st3d_t;
 
 /****************************************************************************
  * Spatial Audio (SA3D) definitions. See Spatial Audio RFC:
