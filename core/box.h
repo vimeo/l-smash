@@ -817,6 +817,56 @@ typedef struct
     uint8_t stereo_mode;
 } isom_st3d_t;
 
+/* Spherical Video Box(es) */
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
+    /* null-terminated string using UTF-8 characters. */
+    char *metadata_source;
+    uint32_t metadata_source_length;
+} isom_svhd_t;
+
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
+    /* 16.16 fixed point */
+    int32_t pose_yaw_degrees;
+    int32_t pose_pitch_degrees;
+    int32_t pose_roll_degrees;
+} isom_prhd_t;
+
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
+    uint32_t projection_bounds_top;
+    uint32_t projection_bounds_bottom;
+    uint32_t projection_bounds_left;
+    uint32_t projection_bounds_right;
+} isom_equi_t;
+
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
+    uint32_t layout;
+    uint32_t padding;
+} isom_cbmp_t;
+
+/* Spherical Video Box(es) */
+typedef struct
+{
+    ISOM_BASEBOX_COMMON;
+    isom_prhd_t *prhd;
+    isom_equi_t *equi;
+    isom_cbmp_t *cbmp;
+} isom_proj_t;
+
+typedef struct
+{
+    ISOM_BASEBOX_COMMON;
+    isom_svhd_t *svhd;
+    isom_proj_t *proj;
+} isom_sv3d_t;
+
 /* Sampling Rate Box
  * This box may be present only in an AudioSampleEntryV1, and when present,
  * it overrides the samplerate field and documents the actual sampling rate.
@@ -2134,6 +2184,12 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_QTFF_ESDS (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)   /* preceded by 'frma' and 'mp4a' */
 #define LSMASH_BOX_PRECEDENCE_ISOM_DOVI (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_ST3D (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_SV3D (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_SVHD (LSMASH_BOX_PRECEDENCE_HM -  2 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_PROJ (LSMASH_BOX_PRECEDENCE_HM -  2 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_PRHD (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_EQUI (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_CBMP (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_BTRT (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TIMS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TSRO (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
@@ -2646,6 +2702,12 @@ isom_chan_t *isom_add_chan( isom_audio_entry_t *audio );
 isom_srat_t *isom_add_srat( isom_audio_entry_t *audio );
 isom_SA3D_t *isom_add_SA3D( isom_audio_entry_t *audio );
 isom_st3d_t *isom_add_st3d( isom_visual_entry_t *visual );
+isom_sv3d_t *isom_add_sv3d( isom_visual_entry_t *visual );
+isom_svhd_t *isom_add_svhd( isom_sv3d_t *sv3d );
+isom_proj_t *isom_add_proj( isom_sv3d_t *sv3d );
+isom_prhd_t *isom_add_prhd( isom_proj_t *proj );
+isom_equi_t *isom_add_equi( isom_proj_t *proj );
+isom_cbmp_t *isom_add_cbmp( isom_proj_t *proj );
 isom_ftab_t *isom_add_ftab( isom_tx3g_entry_t *tx3g );
 isom_stts_t *isom_add_stts( isom_stbl_t *stbl );
 isom_ctts_t *isom_add_ctts( isom_stbl_t *stbl );
