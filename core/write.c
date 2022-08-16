@@ -812,6 +812,58 @@ static int isom_write_st3d( lsmash_bs_t *bs, isom_box_t *box )
     return 0;
 }
 
+static int isom_write_sv3d( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_bs_put_box_common( bs, box );
+    return 0;
+}
+
+static int isom_write_svhd( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_svhd_t *svhd = (isom_svhd_t *)box;
+    isom_bs_put_box_common( bs, svhd );
+    lsmash_bs_put_byte( bs, svhd->metadata_source_length );
+    if( svhd->metadata_source_length )
+        lsmash_bs_put_bytes( bs, svhd->metadata_source_length, svhd->metadata_source );
+    return 0;
+}
+
+static int isom_write_proj( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_bs_put_box_common( bs, box );
+    return 0;
+}
+
+static int isom_write_prhd( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_prhd_t *prhd = (isom_prhd_t *)box;
+    isom_bs_put_box_common( bs, prhd );
+    lsmash_bs_put_be32( bs, prhd->pose_yaw_degrees );
+    lsmash_bs_put_be32( bs, prhd->pose_pitch_degrees );
+    lsmash_bs_put_be32( bs, prhd->pose_roll_degrees );
+    return 0;
+}
+
+static int isom_write_equi( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_equi_t *equi = (isom_equi_t *)box;
+    isom_bs_put_box_common( bs, equi );
+    lsmash_bs_put_be32( bs, equi->projection_bounds_top );
+    lsmash_bs_put_be32( bs, equi->projection_bounds_bottom );
+    lsmash_bs_put_be32( bs, equi->projection_bounds_left );
+    lsmash_bs_put_be32( bs, equi->projection_bounds_right );
+    return 0;
+}
+
+static int isom_write_cbmp( lsmash_bs_t *bs, isom_box_t *box )
+{
+    isom_cbmp_t *cbmp = (isom_cbmp_t *)box;
+    isom_bs_put_box_common( bs, cbmp );
+    lsmash_bs_put_be32( bs, cbmp->layout );
+    lsmash_bs_put_be32( bs, cbmp->padding );
+    return 0;
+}
+
 static int isom_write_stsd( lsmash_bs_t *bs, isom_box_t *box )
 {
     isom_stsd_t *stsd = (isom_stsd_t *)box;
@@ -1727,6 +1779,12 @@ void isom_set_box_writer( isom_box_t *box )
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_STBL, isom_write_stbl );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_SA3D, isom_write_SA3D );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_ST3D, isom_write_st3d );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_SV3D, isom_write_sv3d );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_SVHD, isom_write_svhd );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_PROJ, isom_write_proj );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_PRHD, isom_write_prhd );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_EQUI, isom_write_equi );
+        ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_CBMP, isom_write_cbmp );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_STSD, isom_write_stsd );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, isom_write_dovi );
         ADD_BOX_WRITER_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, isom_write_dovi );
