@@ -47,7 +47,7 @@ extern "C" {
  * Version
  ****************************************************************************/
 #define LSMASH_VERSION_MAJOR  2
-#define LSMASH_VERSION_MINOR 19
+#define LSMASH_VERSION_MINOR 20
 #define LSMASH_VERSION_MICRO  0
 
 #define LSMASH_VERSION_INT( a, b, c ) (((a) << 16) | ((b) << 8) | (c))
@@ -932,6 +932,9 @@ typedef enum
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D,
+    LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD,
+    LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI,
+    LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP,
 
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI,
 
@@ -1207,6 +1210,32 @@ typedef struct
 {
     lsmash_st3d_StereoMode stereo_mode;
 } lsmash_st3d_t;
+
+/****************************************************************************
+ * Spherical Video Boxes definitions. See Spatial Video RFC v2:
+ * https://github.com/google/spatial-media/blob/master/docs/spherical-video-v2-rfc.md
+ ****************************************************************************/
+
+typedef struct
+{
+    int32_t yaw;
+    int32_t pitch;
+    int32_t roll;
+} lsmash_prhd_t;
+
+typedef struct
+{
+    uint32_t top;
+    uint32_t bottom;
+    uint32_t left;
+    uint32_t right;
+} lsmash_equi_t;
+
+typedef struct
+{
+    uint32_t layout;
+    uint32_t padding;
+} lsmash_cbmp_t;
 
 /****************************************************************************
  * Spatial Audio (SA3D) definitions. See Spatial Audio RFC:

@@ -260,6 +260,18 @@ static int isom_initialize_structured_codec_specific_data( lsmash_codec_specific
             specific->size     = sizeof(lsmash_st3d_t);
             specific->destruct = lsmash_free;
             break;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD:
+            specific->size     = sizeof(lsmash_prhd_t);
+            specific->destruct = lsmash_free;
+            break;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI:
+            specific->size     = sizeof(lsmash_equi_t);
+            specific->destruct = lsmash_free;
+            break;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP:
+            specific->size     = sizeof(lsmash_cbmp_t);
+            specific->destruct = lsmash_free;
+            break;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
             specific->size     = sizeof(lsmash_hevc_dovi_t);
             specific->destruct = lsmash_free;
@@ -418,6 +430,15 @@ static int isom_duplicate_structured_specific_data( lsmash_codec_specific_t *dst
             return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D :
             *(lsmash_st3d_t *)dst_data = *(lsmash_st3d_t *)src_data;
+            return 0;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD :
+            *(lsmash_prhd_t *)dst_data = *(lsmash_prhd_t *)src_data;
+            return 0;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI :
+            *(lsmash_equi_t *)dst_data = *(lsmash_equi_t *)src_data;
+            return 0;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP :
+            *(lsmash_cbmp_t *)dst_data = *(lsmash_cbmp_t *)src_data;
             return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
              *(lsmash_hevc_dovi_t *)dst_data = *(lsmash_hevc_dovi_t *)src_data;
@@ -1084,6 +1105,75 @@ static int isom_setup_visual_description( isom_stsd_t *stsd, lsmash_video_summar
 
                 st3d->stereo_mode = data->stereo_mode;
                 lsmash_destroy_codec_specific_data( cs );
+                break;
+            }
+            case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD:
+            {
+                // Do nothing, this data is handled below
+                break;
+            }
+            case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI :
+            case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP :
+            {
+                lsmash_codec_specific_t *cs = lsmash_convert_codec_specific_format( specific, LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !cs )
+                    goto fail;
+
+                // Add the boilerplate boxes
+                isom_sv3d_t *sv3d = isom_add_sv3d( visual );
+                if( LSMASH_IS_NON_EXISTING_BOX( sv3d ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+                isom_svhd_t *svhd = isom_add_svhd( sv3d );
+                if( LSMASH_IS_NON_EXISTING_BOX( svhd ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+                isom_proj_t *proj = isom_add_proj( sv3d );
+                if( LSMASH_IS_NON_EXISTING_BOX( proj ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+                isom_prhd_t *prhd= isom_add_prhd( proj );
+                if( LSMASH_IS_NON_EXISTING_BOX( prhd ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+
+                // Load any user-set PRDH data, if present
+                lsmash_codec_specific_t *ypr = isom_get_codec_specific( summary->opaque, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD );
+                if ( ypr )
+                {
+                    lsmash_prhd_t *ypr_data = (lsmash_prhd_t *)ypr->data.structured;
+                    prhd->pose_yaw_degrees = ypr_data->yaw;
+                    prhd->pose_pitch_degrees = ypr_data->pitch;
+                    prhd->pose_roll_degrees = ypr_data->roll;
+                }
+
+                // Now add the projection boxes
+                if( specific->type == LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI )
+                {
+                    isom_equi_t *equi = isom_add_equi( proj );
+                    lsmash_equi_t *data = (lsmash_equi_t *)cs->data.structured;
+                    equi->projection_bounds_top = data->top;
+                    equi->projection_bounds_bottom = data->bottom;
+                    equi->projection_bounds_left = data->left;
+                    equi->projection_bounds_right = data->right;
+                }
+                else if( specific->type == LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP )
+                {
+                    isom_cbmp_t *cbmp = isom_add_cbmp( proj );
+                    lsmash_cbmp_t *data = (lsmash_cbmp_t *)cs->data.structured;
+                    cbmp->layout = data->layout;
+                    cbmp->padding = data->padding;
+                }
+                lsmash_destroy_codec_specific_data( cs );
+
                 break;
             }
             case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_H264_BITRATE :
@@ -2599,6 +2689,9 @@ static lsmash_codec_specific_data_type isom_get_codec_specific_data_type( lsmash
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ALAC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_ALAC );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_SA3D, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ST3D, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_PRHD, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_EQUI, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_CBMP, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ESDS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_MP4SYS_DECODER_CONFIG );

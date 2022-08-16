@@ -95,6 +95,11 @@ typedef struct
     int      ambisonic_order;
     int      has_stereo_mode;
     char    *stereo_mode;
+    char    *projection;
+    int      has_ypr;
+    double   yaw;
+    double   pitch;
+    double   roll;
     uint32_t fps_num;
     uint32_t fps_den;
     uint32_t encoder_delay;
@@ -280,6 +285,8 @@ static void display_help( void )
              "    dv-profile=<arg>          Specify Dolby Vision profile\n"
              "    ambisonic-order=<integer> Specify ambisonic order for a spatial audio track\n"
              "    stereo-mode=<string>      Specify stereoscopic 3D mode on the video track\n"
+             "    projection=<string>       Specify projection mode for a spherical video\n"
+             "    ypr=<string>              Specify yaw/pitch/roll as float values separated by /\n"
              "    fps=<arg>                 Specify video framerate\n"
              "                                  <arg> is <integer> or <integer>/<integer>\n"
              "    language=<string>         Specify media language\n"
@@ -704,6 +711,20 @@ static int parse_track_options( input_t *input )
                 track_opt->stereo_mode = track_parameter;
                 track_opt->has_stereo_mode = 1;
             }
+            else if( strstr( track_option, "projection=" ) )
+            {
+                char *track_parameter = strchr( track_option, '=' ) + 1;
+                track_opt->projection = track_parameter;
+            }
+            else if( strstr( track_option, "ypr=" ) )
+            {
+                char *track_parameter = strchr( track_option, '=' ) + 1;
+                if( sscanf( track_parameter, "%lf/%lf/%lf", &track_opt->yaw, &track_opt->pitch, &track_opt->roll ) != 3 )
+                {
+                    return ERROR_MSG( "incorrect number of elements for %s\n", track_option );
+                }
+                track_opt->has_ypr = 1;
+            }
             else if( strstr( track_option, "fps=" ) )
             {
                 char *track_parameter = strchr( track_option, '=' ) + 1;
@@ -1096,6 +1117,47 @@ static int prepare_output( muxer_t *muxer )
 
                         lsmash_add_codec_specific_data( in_track->summary, st3d );
                         lsmash_destroy_codec_specific_data( st3d );
+                    }
+                    if( track_opt->has_ypr )
+                    {
+                        lsmash_codec_specific_t *prhd = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD,
+                                                                                           LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                        if( !prhd )
+                            return ERROR_MSG( "failed to allocate Projection Header" );
+
+                        lsmash_prhd_t *data = (lsmash_prhd_t *)prhd->data.structured;
+                        data->yaw   = (int32_t)( track_opt->yaw * (1 << 16) );
+                        data->pitch = (int32_t)( track_opt->pitch * (1 << 16) );
+                        data->roll  = (int32_t)( track_opt->roll * (1 << 16) );
+
+                        lsmash_add_codec_specific_data( in_track->summary, prhd );
+                        lsmash_destroy_codec_specific_data( prhd );
+                    }
+                    if( track_opt->projection )
+                    {
+                        if( strstr( track_opt->projection, "equirectangular" ) )
+                        {
+                            lsmash_codec_specific_t *equi = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI,
+                                                                                               LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                            if( !equi )
+                                return ERROR_MSG( "failed to allocate the Projection Box" );
+
+                            lsmash_add_codec_specific_data( in_track->summary, equi );
+                            lsmash_destroy_codec_specific_data( equi );
+                        }
+                        else if( strstr( track_opt->projection, "cubemap" ) )
+                        {
+                            lsmash_codec_specific_t *cbmp = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP,
+                                                                                               LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                            if( !cbmp )
+                                return ERROR_MSG( "failed to allocate the Projection Box" );
+
+                            lsmash_add_codec_specific_data( in_track->summary, cbmp );
+                            lsmash_destroy_codec_specific_data( cbmp );
+                        } else {
+                            return ERROR_MSG( "unsupported projection mode %s", track_opt->projection );
+                        }
+
                     }
 
                     media_param.timescale          = timescale;
