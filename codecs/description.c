@@ -2861,6 +2861,60 @@ lsmash_summary_t *isom_create_video_summary_from_description( isom_sample_entry_
                 lsmash_st3d_t *data = (lsmash_st3d_t *)specific->data.structured;
                 data->stereo_mode = st3d->stereo_mode;
             }
+            else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_SV3D ) )
+            {
+                lsmash_box_path_t prhd_path[3] = { { ISOM_BOX_TYPE_PROJ, 0 },
+                                                   { ISOM_BOX_TYPE_PRHD, 0 },
+                                                   { LSMASH_BOX_TYPE_UNSPECIFIED, 0 } };
+                lsmash_box_t *prhd_box = lsmash_get_box(box, prhd_path);
+                if( prhd_box )
+                {
+                    specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_PRHD,
+                                                                  LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                    isom_prhd_t *prhd = (isom_prhd_t *)prhd_box;
+                    lsmash_prhd_t *data = (lsmash_prhd_t *)specific->data.structured;
+                    data->yaw   = prhd->pose_yaw_degrees;
+                    data->pitch = prhd->pose_pitch_degrees;
+                    data->roll  = prhd->pose_roll_degrees;
+                    if( lsmash_list_add_entry( &summary->opaque->list, specific ) < 0 )
+                    {
+                        lsmash_destroy_codec_specific_data( specific );
+                        goto fail;
+                    }
+                }
+
+                lsmash_box_path_t equi_path[3] = { { ISOM_BOX_TYPE_PROJ, 0 },
+                                                   { ISOM_BOX_TYPE_EQUI, 0 },
+                                                   { LSMASH_BOX_TYPE_UNSPECIFIED, 0 } };
+                lsmash_box_t *equi_box = lsmash_get_box(box, equi_path);
+                if( equi_box )
+                {
+                    specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_EQUI,
+                                                                  LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                    if( lsmash_list_add_entry( &summary->opaque->list, specific ) < 0 )
+                    {
+                        lsmash_destroy_codec_specific_data( specific );
+                        goto fail;
+                    }
+                }
+
+                lsmash_box_path_t cbmp_path[3] = { { ISOM_BOX_TYPE_PROJ, 0 },
+                                                   { ISOM_BOX_TYPE_CBMP, 0 },
+                                                   { LSMASH_BOX_TYPE_UNSPECIFIED, 0 } };
+                lsmash_box_t *cbmp_box = lsmash_get_box(box, cbmp_path);
+                if( cbmp_box )
+                {
+                    specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP,
+                                                                  LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                    if( lsmash_list_add_entry( &summary->opaque->list, specific ) < 0 )
+                    {
+                        lsmash_destroy_codec_specific_data( specific );
+                        goto fail;
+                    }
+                }
+
+                continue;
+            }
             else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_BTRT ) )
             {
                 specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_H264_BITRATE,
