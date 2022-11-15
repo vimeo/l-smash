@@ -2851,6 +2851,16 @@ lsmash_summary_t *isom_create_video_summary_from_description( isom_sample_entry_
                 data->reserved2[2]                  = dovi->reserved2[2];
                 data->reserved2[3]                  = dovi->reserved2[3];
             }
+            else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_ST3D ) )
+            {
+                specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_ST3D,
+                                                              LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !specific )
+                    goto fail;
+                isom_st3d_t *st3d = (isom_st3d_t *)box;
+                lsmash_st3d_t *data = (lsmash_st3d_t *)specific->data.structured;
+                data->stereo_mode = st3d->stereo_mode;
+            }
             else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_BTRT ) )
             {
                 specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_H264_BITRATE,
