@@ -3164,7 +3164,7 @@ lsmash_summary_t *isom_create_audio_summary_from_description( isom_sample_entry_
                 }
             }
             isom_wave_t *wave = (isom_wave_t *)isom_get_extension_box_format( &audio->extensions, QT_BOX_TYPE_WAVE );
-            if( LSMASH_IS_EXISTING_BOX( wave->enda ) )
+            if( LSMASH_IS_EXISTING_BOX( wave->enda ) && wave->enda->size > 0 )
             {
                 if( wave->enda->littleEndian )
                     data->format_flags &= ~QT_LPCM_FORMAT_FLAG_BIG_ENDIAN;
