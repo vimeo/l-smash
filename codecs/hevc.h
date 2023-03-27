@@ -239,9 +239,10 @@ typedef struct
 
 typedef struct
 {
-    hevc_pic_timing_t     pic_timing;
-    hevc_recovery_point_t recovery_point;
+    hevc_pic_timing_t        pic_timing;
+    hevc_recovery_point_t    recovery_point;
     hevc_mastering_display_t mastering_display;
+    uint8_t                  hdr10p_present;
 } hevc_sei_t;
 
 /* Slice segment */

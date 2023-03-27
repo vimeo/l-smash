@@ -850,14 +850,42 @@ static int open_input_files( muxer_t *muxer )
                 if( !opt->isom && opt->qtff )
                     return ERROR_MSG( "the input seems AV1, at present available only for ISO Base Media file format.\n" );
                 if( opt->isom )
+                {
                     add_brand( opt, ISOM_BRAND_TYPE_AV01 );
+
+                    for( int i = 1; i <= lsmash_count_codec_specific_data( in_track->summary ); i++ )
+                    {
+                        lsmash_codec_specific_t *av1 = lsmash_get_codec_specific_data( in_track->summary, i );
+                        if ( !av1 )
+                            continue;
+                        if ( av1->type != LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_AV1 )
+                            continue;
+                        if ( ((lsmash_av1_specific_parameters_t *)av1->data.structured)->has_hdr10p )
+                            add_brand( opt, ISOM_BRAND_TYPE_CDM4 );
+                    }
+                }
             }
             else if( lsmash_check_codec_type_identical( codec_type, ISOM_CODEC_TYPE_HVC1_VIDEO ) )
             {
                 if( !opt->isom && opt->qtff )
                     return ERROR_MSG( "the input seems HEVC, at present available only for ISO Base Media file format.\n" );
-                if( in_track->opt.has_dv )
-                    add_brand( opt, ISOM_BRAND_TYPE_DBY1 );
+                if( opt->isom )
+                {
+                    if( in_track->opt.has_dv )
+                        add_brand( opt, ISOM_BRAND_TYPE_DBY1 );
+
+                    for( int i = 1; i <= lsmash_count_codec_specific_data( in_track->summary ); i++ )
+                    {
+                        lsmash_codec_specific_t *hevc = lsmash_get_codec_specific_data( in_track->summary, i );
+                        if ( !hevc )
+                            continue;
+                        if ( hevc->type != LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC )
+                            continue;
+                        if ( ((lsmash_hevc_specific_parameters_t *)hevc->data.structured)->has_hdr10p ) {
+                            add_brand( opt, ISOM_BRAND_TYPE_CDM4 );
+                        }
+                    }
+                }
             }
             else if( lsmash_check_codec_type_identical( codec_type, ISOM_CODEC_TYPE_VC_1_VIDEO ) )
             {
