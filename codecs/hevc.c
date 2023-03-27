@@ -1363,6 +1363,26 @@ int hevc_parse_sei
                 sei->mastering_display.max_display_mastering_luminance = lsmash_bits_get( bits, 32 );
                 sei->mastering_display.min_display_mastering_luminance = lsmash_bits_get( bits, 32 );
             }
+            else if( payloadType == HEVC_SEI_ITU_T_T35 )
+            {
+                /* Compare metadata header bytes to expected HDR10+ dynamic metadata header. */
+                if ( payloadSize > 8 )
+                {
+                    uint8_t country_code = lsmash_bits_get( bits, 8 );
+                    if ( country_code != 0xb5 )
+                        continue;
+                    uint16_t provider_code = lsmash_bits_get( bits, 16 );
+                    if ( provider_code != 0x003c )
+                        continue;
+                    uint16_t provider_oriented_code = lsmash_bits_get( bits, 16 );
+                    if ( provider_oriented_code != 0x0001 )
+                        continue;
+                    uint16_t application_identifier = lsmash_bits_get( bits, 16 );
+                    if ( application_identifier != 0x0401 )
+                        continue;
+                    sei->hdr10p_present = 1;
+                }
+            }
             else
                 goto skip_sei_message;
         }

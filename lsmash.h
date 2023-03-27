@@ -135,6 +135,7 @@ typedef enum
     ISOM_BRAND_TYPE_ARRI  = LSMASH_4CC( 'A', 'R', 'R', 'I' ),   /* ARRI Digital Camera */
     ISOM_BRAND_TYPE_CAEP  = LSMASH_4CC( 'C', 'A', 'E', 'P' ),   /* Canon Digital Camera */
     ISOM_BRAND_TYPE_CDES  = LSMASH_4CC( 'C', 'D', 'e', 's' ),   /* Convergent Designs */
+    ISOM_BRAND_TYPE_CDM4  = LSMASH_4CC( 'c', 'd', 'm', '4' ),   /* CMAF Media Profile with HDR10+ dynamic metadata */
     ISOM_BRAND_TYPE_LCAG  = LSMASH_4CC( 'L', 'C', 'A', 'G' ),   /* Leica digital camera */
     ISOM_BRAND_TYPE_M4A   = LSMASH_4CC( 'M', '4', 'A', ' ' ),   /* iTunes MPEG-4 audio protected or not */
     ISOM_BRAND_TYPE_M4B   = LSMASH_4CC( 'M', '4', 'B', ' ' ),   /* iTunes AudioBook protected or not */
@@ -3413,6 +3414,7 @@ typedef struct
                                                      *   NALUnitLength indicates the size of a NAL unit measured in bytes,
                                                      *   and includes the size of both the one byte NAL header and the EBSP payload
                                                      *   but does not include the length field itself. */
+    uint8_t  has_hdr10p;                            /* an ITU-T T.35 metadata SEI message was found with an HDR10+ dynamic metadata header. */
     /* a set of arrays to carry initialization NAL units
      * The NAL unit types are restricted to indicate VPS, SPS, PPS, and SEI NAL units only. */
     lsmash_hevc_parameter_arrays_t *parameter_arrays;
@@ -3463,6 +3465,7 @@ int lsmash_get_hevc_array_completeness
 /* Supported SEIs stored in hvcC */
 typedef enum
 {
+    HEVC_SEI_ITU_T_T35         = 4,
     HEVC_SEI_MASTERING_DISPLAY = 137,
 } lsmash_hevc_sei_payload_type;
 
@@ -3585,6 +3588,7 @@ typedef struct
                                                      * sample will be decoded prior to its presentation time under the constraints of the first level value
                                                      * indicated by seq_level_idx in the Sequence Header OBU (in the configOBUs field or in the associated
                                                      * samples). */
+    uint8_t has_hdr10p;                             /* an ITU-T T.35 metadata OBU was found with an HDR10+ dynamic metadata header. */
     lsmash_av1_config_obus_t configOBUs;            /* zero or more OBUs
                                                      * This field SHALL contain at most one Sequence Header OBU and if present, it SHALL be the first OBU.
                                                      * This field is expected to contain only one Sequence Header OBU and zero or more Metadata OBUs when

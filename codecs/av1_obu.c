@@ -171,10 +171,18 @@ lsmash_av1_specific_parameters_t *obu_av1_parse_first_tu
                     return NULL;
                 }
 
+                /*
+                 * Compare metadata OBU header bytes to expected HDR10+ dynamic metadata OBU header.
+                 * Offset by 2 due to start code and size bytes. The leading byte is an AV1-specific metadata type ID.
+                 */
+                if( obusize > 8 && memcmp( data + off + offset - pos + 2, "\x04\xb5\x00\x3c\x00\x01\x04\x01", 8 ) == 0 )
+                    param->has_hdr10p = 1;
+
                 uint32_t oldpos       = param->configOBUs.sz;
                 param->configOBUs.sz += obusize + pos;
                 uint8_t *newdata      = lsmash_realloc( param->configOBUs.data, param->configOBUs.sz );
-                if( !newdata ) {
+                if( !newdata )
+                {
                     av1_destruct_specific_data( param );
                     return NULL;
                 }

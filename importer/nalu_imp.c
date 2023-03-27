@@ -1373,12 +1373,18 @@ static lsmash_video_summary_t *hevc_setup_first_summary
 )
 {
     hevc_importer_t *hevc_imp = (hevc_importer_t *)importer->info;
+    hevc_info_t *info = &hevc_imp->info;
     lsmash_codec_specific_t *cs = (lsmash_codec_specific_t *)lsmash_list_get_entry_data( hevc_imp->hvcC_list, ++ hevc_imp->hvcC_number );
     if( !cs || !cs->data.structured )
     {
         lsmash_destroy_codec_specific_data( cs );
         return NULL;
     }
+
+    lsmash_hevc_specific_parameters_t *hevc_cs = (lsmash_hevc_specific_parameters_t *)cs->data.structured;
+    if( info->sei.hdr10p_present )
+        hevc_cs->has_hdr10p = 1;
+
     lsmash_video_summary_t *summary = hevc_create_summary( (lsmash_hevc_specific_parameters_t *)cs->data.structured,
                                                            &hevc_imp->info.sps, hevc_imp->max_au_length );
     if( !summary )
