@@ -1216,9 +1216,15 @@ static int prepare_output( muxer_t *muxer )
                         if( track_opt->ambisonic_order < 0 )
                             return ERROR_MSG( "ambisonic order must be a positive integer\n" );
                         uint32_t ambisonic_channels = (track_opt->ambisonic_order + 1) * (track_opt->ambisonic_order + 1);
+                        lsmash_boolean_t head_locked_stereo = LSMASH_BOOLEAN_FALSE;
                         /* ensure that channel count matches ambisonic order, it can also have 2 extra channels if it includes head-locked stereo */
-                        if( ambisonic_channels != summary->channels && ambisonic_channels + 2 != summary->channels )
-                            return ERROR_MSG( "ambisonic order's expected channel count does not match actual channel count\n" );
+                        if( ambisonic_channels != summary->channels )
+                        {
+                            if( ambisonic_channels + 2 == summary->channels )
+                                head_locked_stereo = LSMASH_BOOLEAN_TRUE;
+                            else
+                                return ERROR_MSG( "ambisonic order's expected channel count does not match actual channel count\n" );
+                        }
 
                         lsmash_codec_specific_t *SA3D = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_AUDIO_SA3D,
                                                                                            LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
@@ -1227,7 +1233,7 @@ static int prepare_output( muxer_t *muxer )
 
                         lsmash_SA3D_t *data = (lsmash_SA3D_t *)SA3D->data.structured;
                         data->version                    = 0;
-                        data->head_locked_stereo         = LSMASH_BOOLEAN_FALSE;
+                        data->head_locked_stereo         = head_locked_stereo;
                         data->ambisonic_type             = SA3D_AMBISONIC_TYPE_PERIPHONIC;
                         data->ambisonic_order            = (uint32_t)track_opt->ambisonic_order;
                         data->ambisonic_channel_ordering = SA3D_AMBISONIC_CHANNEL_ORDERING_ACN;
