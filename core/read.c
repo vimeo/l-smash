@@ -2690,6 +2690,70 @@ static int isom_read_skip_box_extra_bytes( lsmash_file_t *file, isom_box_t *box,
     return 0;
 }
 
+static char *isom_read_cstring( lsmash_bs_t *bs, uint64_t end )
+{
+    uint64_t pos = lsmash_bs_count( bs );
+    uint64_t length;
+    char *str;
+    if( pos >= end )
+        return lsmash_memdup( "", 1 );
+    length = end - pos;
+    str = lsmash_malloc( length + 1 );
+    if( !str )
+        return NULL;
+    for( uint32_t i = 0; pos < end; i++, pos = lsmash_bs_count( bs ) )
+    {
+        str[i] = lsmash_bs_get_byte( bs );
+        if( !str[i] )
+        {
+            char *new_str = lsmash_realloc( str, i + 1 );
+            if( !new_str )
+                return str;
+            return new_str;
+        }
+    }
+    str[length] = '\0';
+    return str;
+}
+
+static int isom_read_emsg( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, int level )
+{
+    if( !lsmash_check_box_type_identical( parent->type, LSMASH_BOX_TYPE_UNSPECIFIED ) )
+        return isom_read_unknown_box( file, box, parent, level );
+    ADD_BOX( emsg, lsmash_file_t );
+    box->parent = parent;
+    lsmash_bs_t *bs = file->bs;
+    if( box->version == 0 )
+    {
+        emsg->scheme_id_uri = isom_read_cstring( bs, box->size );
+        emsg->value = isom_read_cstring( bs, box->size );
+        emsg->timescale = lsmash_bs_get_be32( bs );
+        emsg->presentation_time_delta = lsmash_bs_get_be32( bs );
+        emsg->event_duration = lsmash_bs_get_be32( bs );
+        emsg->id = lsmash_bs_get_be32( bs );
+    }
+    else
+    {
+        emsg->timescale = lsmash_bs_get_be32( bs );
+        emsg->presentation_time = lsmash_bs_get_be64( bs );
+        emsg->event_duration = lsmash_bs_get_be32( bs );
+        emsg->id = lsmash_bs_get_be32( bs );
+        emsg->scheme_id_uri = isom_read_cstring( bs, box->size );
+        emsg->value = isom_read_cstring( bs, box->size );
+    }
+    if( !emsg->scheme_id_uri || !emsg->scheme_id_uri )
+        return LSMASH_ERR_MEMORY_ALLOC;
+    uint64_t pos = lsmash_bs_count( bs );
+    emsg->message_data_length = box->size - pos;
+    if( emsg->message_data_length )
+    {
+        emsg->message_data = lsmash_bs_get_bytes( bs, emsg->message_data_length );
+        if( !emsg->message_data )
+            return LSMASH_ERR_MEMORY_ALLOC;
+    }
+    return isom_read_leaf_box_common_last_process( file, box, level, emsg );
+}
+
 int isom_read_box( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, uint64_t parent_pos, int level )
 {
     assert( parent && parent->root && parent->file );
@@ -2996,6 +3060,7 @@ int isom_read_box( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, uin
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_MFRA, lsmash_form_iso_box_type,  isom_read_mfra );
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_TFRA, lsmash_form_iso_box_type,  isom_read_tfra );
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_MFRO, lsmash_form_iso_box_type,  isom_read_mfro );
+        ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_EMSG, lsmash_form_iso_box_type,  isom_read_emsg );
         ADD_BOX_READER_TABLE_ELEMENT( LSMASH_BOX_TYPE_UNSPECIFIED, NULL,  NULL );
         assert( sizeof(box_reader_table) >= (size_t)i * sizeof(box_reader_table[0]) );
 #undef ADD_BOX_READER_TABLE_ELEMENT

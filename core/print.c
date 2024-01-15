@@ -2362,6 +2362,34 @@ static int isom_print_tfdt( FILE *fp, lsmash_file_t *file, isom_box_t *box, int 
     return 0;
 }
 
+static int isom_print_emsg( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_emsg_t *emsg = (isom_emsg_t *)box;
+    int indent = level;
+    isom_print_box_common( fp, indent++, box, "Event Message Box" );
+
+    if ( box->version == 0 )
+    {
+        lsmash_ifprintf( fp, indent, "scheme_id_uri = %s\n", emsg->scheme_id_uri );
+        lsmash_ifprintf( fp, indent, "value = %s\n", emsg->value );
+        lsmash_ifprintf( fp, indent, "timescale = %"PRIu32"\n", emsg->timescale );
+        lsmash_ifprintf( fp, indent, "presentation_time_delta = %"PRIu32"\n", emsg->presentation_time_delta );
+        lsmash_ifprintf( fp, indent, "event_duration = %"PRIu32"\n", emsg->event_duration );
+        lsmash_ifprintf( fp, indent, "id = %"PRIu32"\n", emsg->id );
+    }
+    else
+    {
+        lsmash_ifprintf( fp, indent, "timescale = %"PRIu32"\n", emsg->timescale );
+        lsmash_ifprintf( fp, indent, "presentation_time = %"PRIu64"\n", emsg->presentation_time );
+        lsmash_ifprintf( fp, indent, "event_duration = %"PRIu32"\n", emsg->event_duration );
+        lsmash_ifprintf( fp, indent, "id = %"PRIu32"\n", emsg->id );
+        lsmash_ifprintf( fp, indent, "scheme_id_uri = %s\n", emsg->scheme_id_uri );
+        lsmash_ifprintf( fp, indent, "value = %s\n", emsg->value );
+    }
+    lsmash_ifprintf( fp, indent, "message_data = [%d bytes of data]\n", emsg->message_data_length );
+    return 0;
+}
+
 static int isom_print_trun( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
 {
     isom_trun_t *trun = (isom_trun_t *)box;
@@ -2666,6 +2694,7 @@ static isom_print_box_t isom_select_print_func( isom_box_t *box )
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_PRHD, isom_print_prhd );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_EQUI, isom_print_equi );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_CBMP, isom_print_cbmp );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_EMSG, isom_print_emsg );
         ADD_PRINT_BOX_TABLE_ELEMENT( LSMASH_BOX_TYPE_UNSPECIFIED, NULL );
 #undef ADD_PRINT_BOX_TABLE_ELEMENT
     }
