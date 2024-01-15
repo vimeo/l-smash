@@ -161,7 +161,7 @@ int isom_is_fullbox( const void *box )
 {
     const isom_box_t *current = (const isom_box_t *)box;
     lsmash_box_type_t type = current->type;
-    static lsmash_box_type_t fullbox_type_table[55] = { LSMASH_BOX_TYPE_INITIALIZER };
+    static lsmash_box_type_t fullbox_type_table[56] = { LSMASH_BOX_TYPE_INITIALIZER };
     if( !lsmash_check_box_type_specified( &fullbox_type_table[0] ) )
     {
         /* Initialize the table. */
@@ -219,6 +219,7 @@ int isom_is_fullbox( const void *box )
         fullbox_type_table[i++] = ISOM_BOX_TYPE_PRHD;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_EQUI;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_CBMP;
+        fullbox_type_table[i++] = ISOM_BOX_TYPE_EMSG;
         fullbox_type_table[i]   = LSMASH_BOX_TYPE_UNSPECIFIED;
     }
     for( int i = 0; lsmash_check_box_type_specified( &fullbox_type_table[i] ); i++ )
@@ -1103,6 +1104,14 @@ static void isom_remove_keys_entry( isom_keys_entry_t *data )
     lsmash_free( data );
 }
 
+static void isom_remove_emsg( isom_emsg_t *emsg )
+{
+    lsmash_free( emsg->scheme_id_uri );
+    lsmash_free( emsg->value );
+    lsmash_free( emsg->message_data );
+    REMOVE_BOX( emsg );
+}
+
 /* box size updater */
 uint64_t isom_update_box_size( void *opaque_box )
 {
@@ -1679,6 +1688,7 @@ DEFINE_SIMPLE_BOX_IN_LIST_ADDER( isom_add_trun, trun, traf, ISOM_BOX_TYPE_TRUN, 
 DEFINE_SIMPLE_BOX_ADDER        ( isom_add_mfra, mfra, file_abstract, ISOM_BOX_TYPE_MFRA, LSMASH_BOX_PRECEDENCE_ISOM_MFRA )
 DEFINE_SIMPLE_BOX_IN_LIST_ADDER( isom_add_tfra, tfra, mfra, ISOM_BOX_TYPE_TFRA, LSMASH_BOX_PRECEDENCE_ISOM_TFRA )
 DEFINE_SIMPLE_BOX_ADDER        ( isom_add_mfro, mfro, mfra, ISOM_BOX_TYPE_MFRO, LSMASH_BOX_PRECEDENCE_ISOM_MFRO )
+DEFINE_SIMPLE_BOX_IN_LIST_ADDER( isom_add_emsg, emsg, file_abstract, ISOM_BOX_TYPE_EMSG, LSMASH_BOX_PRECEDENCE_ISOM_EMSG )
 
 isom_mdat_t *isom_add_mdat( isom_file_abstract_t *file )
 {
