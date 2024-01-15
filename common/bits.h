@@ -38,5 +38,5 @@ uint64_t lsmash_bits_get( lsmash_bits_t *bits, uint32_t width );
 void *lsmash_bits_export_data( lsmash_bits_t *bits, uint32_t *length );
 int lsmash_bits_import_data( lsmash_bits_t *bits, void *data, uint32_t length );
 
-lsmash_bits_t *lsmash_bits_adhoc_create();
+lsmash_bits_t *lsmash_bits_adhoc_create(void);
 void lsmash_bits_adhoc_cleanup( lsmash_bits_t *bits );

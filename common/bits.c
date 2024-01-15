@@ -171,7 +171,7 @@ int lsmash_bits_import_data( lsmash_bits_t *bits, void *data, uint32_t length )
  bitstream with bytestream for adhoc operation
 ****/
 
-lsmash_bits_t *lsmash_bits_adhoc_create()
+lsmash_bits_t *lsmash_bits_adhoc_create(void)
 {
     lsmash_bs_t *bs = lsmash_bs_create();
     if( !bs )
