@@ -145,6 +145,7 @@ typedef enum
     ISOM_BRAND_TYPE_MPPI  = LSMASH_4CC( 'M', 'P', 'P', 'I' ),   /* Photo Player Multimedia Application Format */
     ISOM_BRAND_TYPE_OPUS  = LSMASH_4CC( 'O', 'p', 'u', 's' ),   /* Opus */
     ISOM_BRAND_TYPE_ROSS  = LSMASH_4CC( 'R', 'O', 'S', 'S' ),   /* Ross Video */
+    ISOM_BRAND_TYPE_AID3  = LSMASH_4CC( 'a', 'i', 'd', '3' ),   /* AOM Timed ID3 Metadata */
     ISOM_BRAND_TYPE_AV01  = LSMASH_4CC( 'a', 'v', '0', '1' ),   /* AV1 */
     ISOM_BRAND_TYPE_AVC1  = LSMASH_4CC( 'a', 'v', 'c', '1' ),   /* Advanced Video Coding extensions */
     ISOM_BRAND_TYPE_BBXM  = LSMASH_4CC( 'b', 'b', 'x', 'm' ),   /* Blinkbox Master File */

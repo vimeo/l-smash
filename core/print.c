@@ -275,6 +275,7 @@ static void isom_print_brand_description( FILE *fp, lsmash_brand_type brand )
             { ISOM_BRAND_TYPE_MFSM, "Media File for Samsung video Metadata" },
             { ISOM_BRAND_TYPE_MPPI, "Photo Player Multimedia Application Format" },
             { ISOM_BRAND_TYPE_ROSS, "Ross Video" },
+            { ISOM_BRAND_TYPE_AID3, "AOM Timed ID3 Metadata" },
             { ISOM_BRAND_TYPE_AVC1, "Advanced Video Coding extensions" },
             { ISOM_BRAND_TYPE_BBXM, "Blinkbox Master File" },
             { ISOM_BRAND_TYPE_CAQV, "Casio Digital Camera" },
