@@ -459,3 +459,9 @@ int hevc_move_pending_hvcC_param
 (
     hevc_info_t *info
 );
+
+void lhevc_free_arrays
+(
+    lsmash_lhevc_paramater_arrays_t *array,
+    uint8_t numOfArrays
+);
