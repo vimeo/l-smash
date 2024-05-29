@@ -866,6 +866,74 @@ static int isom_print_cbmp( FILE *fp, lsmash_file_t *file, isom_box_t *box, int 
     return 0;
 }
 
+static int isom_print_vexu( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    return isom_print_simple( fp, box, level, "Video Extension Usage Box" );
+}
+
+static int isom_print_eyes( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    return isom_print_simple( fp, box, level, "Stereo View Box" );
+}
+
+static int isom_print_must( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_must_t *must = (isom_must_t *)box;
+    int indent = level;
+    isom_print_box_common( fp, indent++, box, "Required Box Types Box" );
+    int i = 0;
+    uint32_t required = must->required_box_types[i];
+    while( required )
+    {
+        lsmash_ifprintf( fp, indent, "required_box_types[%d] = %c%c%c%c\n", i,
+        (must->required_box_types[i] & 0xFF000000) >> 24,
+            (must->required_box_types[i] & 0xFF0000) >> 16,
+            (must->required_box_types[i] & 0xFF00) >> 8,
+            (must->required_box_types[i] & 0xFF));
+        i++;
+        required = must->required_box_types[i];
+    }
+    return 0;
+}
+
+static int isom_print_stri( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_stri_t *stri = (isom_stri_t *)box;
+    int indent = level;
+    isom_print_box_common( fp, indent++, box, "Stereo View Information Box" );
+    lsmash_ifprintf( fp, indent, "reserved = %"PRIu8"\n", stri->reserved );
+    lsmash_ifprintf( fp, indent, "eye_views_reversed = %"PRIu8"\n", stri->eye_views_reversed );
+    lsmash_ifprintf( fp, indent, "has_additional_views = %"PRIu8"\n", stri->has_additional_views );
+    lsmash_ifprintf( fp, indent, "has_right_eye_view = %"PRIu8"\n", stri->has_right_eye_view );
+    lsmash_ifprintf( fp, indent, "has_left_eye_view = %"PRIu8"\n", stri->has_left_eye_view );
+    return 0;
+}
+
+static int isom_print_hero( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_hero_t *hero = (isom_hero_t *)box;
+    int indent = level;
+    isom_print_box_common( fp, indent++, box, "Hero Stereo Eye Description Box" );
+    char *indicator;
+    switch( hero->hero_eye_indicator )
+    {
+        case 0:
+            indicator = "none";
+            break;
+        case 1:
+            indicator = "left";
+            break;
+        case 2:
+            indicator = "right";
+            break;
+        default:
+            indicator = "reserved";
+            break;
+    }
+    lsmash_ifprintf( fp, indent, "hero_eye_indicator = %"PRIu8" (%s)\n", hero->hero_eye_indicator, indicator );
+    return 0;
+}
+
 static int isom_print_stsd( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
 {
     isom_stsd_t *stsd = (isom_stsd_t *)box;
@@ -1416,7 +1484,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
     {
         lsmash_box_type_t type;
         int (*print_func)( FILE *, lsmash_file_t *, isom_box_t *, int );
-    } print_description_extension_table[64] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
+    } print_description_extension_table[69] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
     if( !print_description_extension_table[0].print_func )
     {
         /* Initialize the table. */
@@ -1460,6 +1528,11 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_PRHD, isom_print_prhd );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_EQUI, isom_print_equi );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_CBMP, isom_print_cbmp );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_VEXU, isom_print_vexu );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_EYES, isom_print_eyes );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_MUST, isom_print_must );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_STRI, isom_print_stri );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_HERO, isom_print_hero );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_FTAB, isom_print_ftab );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT(   QT_BOX_TYPE_ESDS, mp4sys_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT(   QT_BOX_TYPE_ALAC, alac_print_codec_specific );
@@ -2596,7 +2669,7 @@ static isom_print_box_t isom_select_print_func( isom_box_t *box )
     {
         lsmash_box_type_t type;
         isom_print_box_t  func;
-    } print_box_table[128] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
+    } print_box_table[132] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
     if( !print_box_table[0].func )
     {
         /* Initialize the table. */
@@ -2695,6 +2768,10 @@ static isom_print_box_t isom_select_print_func( isom_box_t *box )
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_EQUI, isom_print_equi );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_CBMP, isom_print_cbmp );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_EMSG, isom_print_emsg );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_EYES, isom_print_eyes );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_MUST, isom_print_must );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_STRI, isom_print_stri );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_HERO, isom_print_hero );
         ADD_PRINT_BOX_TABLE_ELEMENT( LSMASH_BOX_TYPE_UNSPECIFIED, NULL );
 #undef ADD_PRINT_BOX_TABLE_ELEMENT
     }

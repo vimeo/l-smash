@@ -867,6 +867,40 @@ typedef struct
     isom_proj_t *proj;
 } isom_sv3d_t;
 
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
+    uint32_t *required_box_types;
+} isom_must_t;
+
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
+    uint8_t reserved;
+    uint8_t eye_views_reversed;
+    uint8_t has_additional_views;
+    uint8_t has_right_eye_view;
+    uint8_t has_left_eye_view;
+} isom_stri_t;
+
+typedef struct {
+    ISOM_FULLBOX_COMMON;
+    uint8_t hero_eye_indicator;
+} isom_hero_t;
+
+typedef struct
+{
+    ISOM_BASEBOX_COMMON;
+    isom_stri_t *stri;
+    isom_hero_t *hero;
+} isom_eyes_t;
+
+typedef struct
+{
+    ISOM_BASEBOX_COMMON;
+    isom_eyes_t *eyes;
+} isom_vexu_t;
+
 /* Sampling Rate Box
  * This box may be present only in an AudioSampleEntryV1, and when present,
  * it overrides the samplerate field and documents the actual sampling rate.
@@ -2232,6 +2266,11 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_ISOM_PRHD (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_EQUI (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_CBMP (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_VEXU (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_EYES (LSMASH_BOX_PRECEDENCE_HM -  2 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_MUST (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_STRI (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_HERO (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_BTRT (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TIMS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TSRO (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
@@ -2750,6 +2789,11 @@ isom_proj_t *isom_add_proj( isom_sv3d_t *sv3d );
 isom_prhd_t *isom_add_prhd( isom_proj_t *proj );
 isom_equi_t *isom_add_equi( isom_proj_t *proj );
 isom_cbmp_t *isom_add_cbmp( isom_proj_t *proj );
+isom_vexu_t *isom_add_vexu( isom_visual_entry_t *visual );
+isom_eyes_t *isom_add_eyes( isom_vexu_t *vexu );
+isom_must_t *isom_add_must( isom_eyes_t *eyes );
+isom_stri_t *isom_add_stri( isom_eyes_t *eyes );
+isom_hero_t *isom_add_hero( isom_eyes_t *eyes );
 isom_ftab_t *isom_add_ftab( isom_tx3g_entry_t *tx3g );
 isom_stts_t *isom_add_stts( isom_stbl_t *stbl );
 isom_ctts_t *isom_add_ctts( isom_stbl_t *stbl );
