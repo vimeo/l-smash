@@ -161,7 +161,7 @@ int isom_is_fullbox( const void *box )
 {
     const isom_box_t *current = (const isom_box_t *)box;
     lsmash_box_type_t type = current->type;
-    static lsmash_box_type_t fullbox_type_table[60] = { LSMASH_BOX_TYPE_INITIALIZER };
+    static lsmash_box_type_t fullbox_type_table[62] = { LSMASH_BOX_TYPE_INITIALIZER };
     if( !lsmash_check_box_type_specified( &fullbox_type_table[0] ) )
     {
         /* Initialize the table. */
@@ -224,6 +224,8 @@ int isom_is_fullbox( const void *box )
         fullbox_type_table[i++] = ISOM_BOX_TYPE_MUST;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_STRI;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_HERO;
+        fullbox_type_table[i++] = ISOM_BOX_TYPE_BLIN;
+        fullbox_type_table[i++] = ISOM_BOX_TYPE_DADJ;
         fullbox_type_table[i]   = LSMASH_BOX_TYPE_UNSPECIFIED;
     }
     for( int i = 0; lsmash_check_box_type_specified( &fullbox_type_table[i] ); i++ )
@@ -1532,6 +1534,10 @@ DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_eyes, eyes, vexu,   ISOM_BOX_TYPE
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_must, must, eyes,   ISOM_BOX_TYPE_MUST, LSMASH_BOX_PRECEDENCE_ISOM_MUST, 1, isom_eyes_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_stri, stri, eyes,   ISOM_BOX_TYPE_STRI, LSMASH_BOX_PRECEDENCE_ISOM_STRI, 0, isom_eyes_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_hero, hero, eyes,   ISOM_BOX_TYPE_HERO, LSMASH_BOX_PRECEDENCE_ISOM_HERO, 0, isom_eyes_t )
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_cams, cams, eyes,   ISOM_BOX_TYPE_CAMS, LSMASH_BOX_PRECEDENCE_ISOM_CAMS, 0, isom_eyes_t )
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_blin, blin, cams,   ISOM_BOX_TYPE_BLIN, LSMASH_BOX_PRECEDENCE_ISOM_BLIN, 0, isom_cams_t )
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_cmfy, cmfy, eyes,   ISOM_BOX_TYPE_CMFY, LSMASH_BOX_PRECEDENCE_ISOM_CMFY, 0, isom_eyes_t )
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_dadj, dadj, cmfy,   ISOM_BOX_TYPE_DADJ, LSMASH_BOX_PRECEDENCE_ISOM_DADJ, 0, isom_cmfy_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_hfov, hfov, visual, ISOM_BOX_TYPE_HFOV, LSMASH_BOX_PRECEDENCE_ISOM_HFOV, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_wave, wave, audio,    QT_BOX_TYPE_WAVE, LSMASH_BOX_PRECEDENCE_QTFF_WAVE, 0, isom_audio_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_chan, chan, audio,    QT_BOX_TYPE_CHAN, LSMASH_BOX_PRECEDENCE_QTFF_CHAN, 1, isom_audio_entry_t )

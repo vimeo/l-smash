@@ -895,11 +895,36 @@ typedef struct {
     uint8_t hero_eye_indicator;
 } isom_hero_t;
 
+typedef struct {
+    ISOM_FULLBOX_COMMON;
+    // A value that specifies the distance between centers of the lenses of the camera system.
+    uint32_t micrometers; // See: https://developer.apple.com/documentation/videotoolbox/kvtcompressionpropertykey_stereocamerabaseline
+} isom_blin_t;
+
+typedef struct {
+    ISOM_BASEBOX_COMMON;
+    isom_blin_t *blin;
+} isom_cams_t;
+
+typedef struct {
+    ISOM_FULLBOX_COMMON;
+    // A value that indicates a relative shift of the left and right images, which changes the zero parallax plane.
+    // The value is a 32-bit integer, measured over the range of -10000 to 10000, that maps to a uniform range of -1.0 to 1.0.
+    int32_t adjustment; // See: https://developer.apple.com/documentation/videotoolbox/kvtcompressionpropertykey_horizontaldisparityadjustment
+} isom_dadj_t;
+
+typedef struct {
+    ISOM_BASEBOX_COMMON;
+    isom_dadj_t *dadj;
+} isom_cmfy_t;
+
 typedef struct
 {
     ISOM_BASEBOX_COMMON;
     isom_stri_t *stri;
     isom_hero_t *hero;
+    isom_cams_t *cams;
+    isom_cmfy_t *cmfy;
 } isom_eyes_t;
 
 typedef struct
@@ -2285,6 +2310,10 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_ISOM_MUST (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_STRI (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_HERO (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_CAMS (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_BLIN (LSMASH_BOX_PRECEDENCE_HM -  4 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_CMFY (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_DADJ (LSMASH_BOX_PRECEDENCE_HM -  4 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_HFOV (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_BTRT (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TIMS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
@@ -2810,6 +2839,10 @@ isom_eyes_t *isom_add_eyes( isom_vexu_t *vexu );
 isom_must_t *isom_add_must( isom_eyes_t *eyes );
 isom_stri_t *isom_add_stri( isom_eyes_t *eyes );
 isom_hero_t *isom_add_hero( isom_eyes_t *eyes );
+isom_cams_t *isom_add_cams( isom_eyes_t *eyes );
+isom_blin_t *isom_add_blin( isom_cams_t *cams );
+isom_cmfy_t *isom_add_cmfy( isom_eyes_t *eyes );
+isom_dadj_t *isom_add_dadj( isom_cmfy_t *cmfy );
 isom_hfov_t *isom_add_hfov( isom_visual_entry_t *visual );
 isom_ftab_t *isom_add_ftab( isom_tx3g_entry_t *tx3g );
 isom_stts_t *isom_add_stts( isom_stbl_t *stbl );
