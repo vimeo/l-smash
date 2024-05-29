@@ -901,6 +901,12 @@ typedef struct
     isom_eyes_t *eyes;
 } isom_vexu_t;
 
+typedef struct
+{
+    ISOM_BASEBOX_COMMON;
+    uint32_t millidegrees;
+} isom_hfov_t;
+
 /* Sampling Rate Box
  * This box may be present only in an AudioSampleEntryV1, and when present,
  * it overrides the samplerate field and documents the actual sampling rate.
@@ -2271,6 +2277,7 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_ISOM_MUST (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_STRI (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_HERO (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_HFOV (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_BTRT (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TIMS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_TSRO (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
@@ -2794,6 +2801,7 @@ isom_eyes_t *isom_add_eyes( isom_vexu_t *vexu );
 isom_must_t *isom_add_must( isom_eyes_t *eyes );
 isom_stri_t *isom_add_stri( isom_eyes_t *eyes );
 isom_hero_t *isom_add_hero( isom_eyes_t *eyes );
+isom_hfov_t *isom_add_hfov( isom_visual_entry_t *visual );
 isom_ftab_t *isom_add_ftab( isom_tx3g_entry_t *tx3g );
 isom_stts_t *isom_add_stts( isom_stbl_t *stbl );
 isom_ctts_t *isom_add_ctts( isom_stbl_t *stbl );

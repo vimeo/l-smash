@@ -1081,6 +1081,17 @@ static int isom_read_hero( lsmash_file_t *file, isom_box_t *box, isom_box_t *par
     return isom_read_leaf_box_common_last_process( file, box, level, hero );
 }
 
+static int isom_read_hfov( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, int level )
+{
+    ADD_BOX( hfov, isom_visual_entry_t );
+    isom_box_common_copy( hfov, box );
+
+    lsmash_bs_t *bs = file->bs;
+    hfov->millidegrees = lsmash_bs_get_be32( bs );
+
+    return isom_read_leaf_box_common_last_process( file, box, level, hfov );
+}
+
 static int isom_read_stsd( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, int level )
 {
     if( !lsmash_check_box_type_identical( parent->type, ISOM_BOX_TYPE_STBL )
@@ -3246,6 +3257,7 @@ int isom_read_box( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, uin
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_ST3D, lsmash_form_iso_box_type,  isom_read_st3d );
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_SV3D, lsmash_form_iso_box_type,  isom_read_sv3d );
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_VEXU, lsmash_form_iso_box_type,  isom_read_vexu );
+            ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_HFOV, lsmash_form_iso_box_type,  isom_read_hfov );
             /* Others */
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_ESDS, lsmash_form_iso_box_type,  isom_read_esds );
             ADD_EXTENSION_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_FTAB, lsmash_form_iso_box_type,  isom_read_ftab );
