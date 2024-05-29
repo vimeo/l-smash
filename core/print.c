@@ -896,6 +896,15 @@ static int isom_print_must( FILE *fp, lsmash_file_t *file, isom_box_t *box, int 
     return 0;
 }
 
+static int isom_print_hfov( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_hfov_t *hfov = (isom_hfov_t *)box;
+    int indent = level;
+    isom_print_box_common( fp, indent++, box, "Horizontal Field Of View Box" );
+    lsmash_ifprintf( fp, indent, "millidegrees = %"PRIu32"\n", hfov->millidegrees );
+    return 0;
+}
+
 static int isom_print_stri( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
 {
     isom_stri_t *stri = (isom_stri_t *)box;
@@ -1484,7 +1493,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
     {
         lsmash_box_type_t type;
         int (*print_func)( FILE *, lsmash_file_t *, isom_box_t *, int );
-    } print_description_extension_table[69] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
+    } print_description_extension_table[70] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
     if( !print_description_extension_table[0].print_func )
     {
         /* Initialize the table. */
@@ -1533,6 +1542,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_MUST, isom_print_must );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_STRI, isom_print_stri );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_HERO, isom_print_hero );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_HFOV, isom_print_hfov );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_FTAB, isom_print_ftab );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT(   QT_BOX_TYPE_ESDS, mp4sys_print_codec_specific );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT(   QT_BOX_TYPE_ALAC, alac_print_codec_specific );
