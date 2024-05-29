@@ -1013,6 +1013,17 @@ static int isom_read_cbmp( lsmash_file_t *file, isom_box_t *box, isom_box_t *par
     return isom_read_leaf_box_common_last_process( file, box, level, cbmp );
 }
 
+static int isom_read_prji( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, int level )
+{
+    ADD_BOX( prji, isom_proj_t );
+    isom_box_common_copy( prji, box );
+
+    lsmash_bs_t *bs = file->bs;
+    prji->projection_type = lsmash_bs_get_be32( bs );
+
+    return isom_read_leaf_box_common_last_process( file, box, level, prji );
+}
+
 static int isom_read_vexu( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, int level )
 {
     ADD_BOX( vexu, isom_visual_entry_t );
@@ -3061,7 +3072,7 @@ int isom_read_box( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, uin
         lsmash_compact_box_type_t fourcc;
         lsmash_box_type_t (*form_box_type_func)( lsmash_compact_box_type_t );
         int (*reader_func)( lsmash_file_t *, isom_box_t *, isom_box_t *, int );
-    } box_reader_table[131] = { { 0, NULL, NULL } };
+    } box_reader_table[132] = { { 0, NULL, NULL } };
     if( !box_reader_table[0].reader_func )
     {
         /* Initialize the table. */
@@ -3097,6 +3108,7 @@ int isom_read_box( lsmash_file_t *file, isom_box_t *box, isom_box_t *parent, uin
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_PRHD, lsmash_form_iso_box_type,  isom_read_prhd );
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_EQUI, lsmash_form_iso_box_type,  isom_read_equi );
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_CBMP, lsmash_form_iso_box_type,  isom_read_cbmp );
+        ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_PRJI, lsmash_form_iso_box_type,  isom_read_prji );
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_EYES, lsmash_form_iso_box_type,  isom_read_eyes );
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_MUST, lsmash_form_iso_box_type,  isom_read_must );
         ADD_BOX_READER_TABLE_ELEMENT( ISOM_BOX_TYPE_STRI, lsmash_form_iso_box_type,  isom_read_stri );

@@ -161,7 +161,7 @@ int isom_is_fullbox( const void *box )
 {
     const isom_box_t *current = (const isom_box_t *)box;
     lsmash_box_type_t type = current->type;
-    static lsmash_box_type_t fullbox_type_table[59] = { LSMASH_BOX_TYPE_INITIALIZER };
+    static lsmash_box_type_t fullbox_type_table[60] = { LSMASH_BOX_TYPE_INITIALIZER };
     if( !lsmash_check_box_type_specified( &fullbox_type_table[0] ) )
     {
         /* Initialize the table. */
@@ -219,6 +219,7 @@ int isom_is_fullbox( const void *box )
         fullbox_type_table[i++] = ISOM_BOX_TYPE_PRHD;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_EQUI;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_CBMP;
+        fullbox_type_table[i++] = ISOM_BOX_TYPE_PRJI;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_EMSG;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_MUST;
         fullbox_type_table[i++] = ISOM_BOX_TYPE_STRI;
@@ -1525,6 +1526,7 @@ DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_proj, proj, sv3d,   ISOM_BOX_TYPE
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_prhd, prhd, proj,   ISOM_BOX_TYPE_PRHD, LSMASH_BOX_PRECEDENCE_ISOM_PRHD, 0, isom_proj_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_equi, equi, proj,   ISOM_BOX_TYPE_EQUI, LSMASH_BOX_PRECEDENCE_ISOM_EQUI, 0, isom_proj_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_cbmp, cbmp, proj,   ISOM_BOX_TYPE_CBMP, LSMASH_BOX_PRECEDENCE_ISOM_CBMP, 0, isom_proj_t )
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_prji, prji, proj,   ISOM_BOX_TYPE_PRJI, LSMASH_BOX_PRECEDENCE_ISOM_PRJI, 0, isom_proj_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_vexu, vexu, visual, ISOM_BOX_TYPE_VEXU, LSMASH_BOX_PRECEDENCE_ISOM_VEXU, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_eyes, eyes, vexu,   ISOM_BOX_TYPE_EYES, LSMASH_BOX_PRECEDENCE_ISOM_EYES, 0, isom_vexu_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_must, must, eyes,   ISOM_BOX_TYPE_MUST, LSMASH_BOX_PRECEDENCE_ISOM_MUST, 1, isom_eyes_t )
