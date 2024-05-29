@@ -502,6 +502,18 @@ typedef struct {
     uint32_t reserved2[4];
 } isom_dovi_t;
 
+typedef struct {
+    ISOM_BASEBOX_COMMON;
+    uint8_t configurationVersion;
+    uint16_t min_spatial_segmentation_idc;
+    uint8_t parallelismType;
+    uint8_t numTemporalLayers;
+    uint8_t temporalIdNested;
+    uint8_t lengthSizeMinusOne;
+    uint8_t numOfArrays;
+    lsmash_lhevc_paramater_arrays_t *array;
+} isom_lhvC_t;
+
 typedef struct
 {
     /* This box is in RTP and RTP reception hint track sample descriptions */
@@ -2297,6 +2309,7 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_ISOM_ESDS (LSMASH_BOX_PRECEDENCE_HM -  0 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_QTFF_ESDS (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)   /* preceded by 'frma' and 'mp4a' */
 #define LSMASH_BOX_PRECEDENCE_ISOM_DOVI (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_LHVC (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_ST3D (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_SV3D (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_SVHD (LSMASH_BOX_PRECEDENCE_HM -  2 * LSMASH_BOX_PRECEDENCE_S)
@@ -2814,6 +2827,7 @@ isom_cspc_t *isom_add_cspc( isom_visual_entry_t *visual );
 isom_sgbt_t *isom_add_sgbt( isom_visual_entry_t *visual );
 isom_stsl_t *isom_add_stsl( isom_visual_entry_t *visual );
 isom_dovi_t *isom_add_dovi( isom_visual_entry_t *visual );
+isom_lhvC_t *isom_add_lhvC( isom_visual_entry_t *visual );
 isom_btrt_t *isom_add_btrt( isom_visual_entry_t *visual );
 isom_tims_t *isom_add_tims( isom_hint_entry_t *hint );
 isom_tsro_t *isom_add_tsro( isom_hint_entry_t *hint );

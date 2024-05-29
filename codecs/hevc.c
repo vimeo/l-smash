@@ -3319,3 +3319,109 @@ int hevc_copy_codec_specific
     }
     return 0;
 }
+
+void lhevc_free_arrays( lsmash_lhevc_paramater_arrays_t *array, uint8_t numOfArrays )
+{
+    if( array )
+    {
+        for( uint8_t i = 0; i < numOfArrays; i++ )
+        {
+            for( uint16_t j = 0; j < array[i].numNalus; j++ )
+                lsmash_free( array[i].nalUnit[j].nalUnit );
+            lsmash_free( array[i].nalUnit );
+        }
+        lsmash_free( array );
+    }
+}
+
+int lhevc_copy_codec_specific
+(
+    lsmash_codec_specific_t *dst,
+    lsmash_codec_specific_t *src
+)
+{
+    assert( src && src->format == LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED && src->data.structured );
+    assert( dst && dst->format == LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED && dst->data.structured );
+    lsmash_lhevc_specific_parameters_t *src_data = (lsmash_lhevc_specific_parameters_t *)src->data.structured;
+    lsmash_lhevc_specific_parameters_t *dst_data = (lsmash_lhevc_specific_parameters_t *)dst->data.structured;
+    lhevc_free_arrays( dst_data->array, dst_data->numOfArrays );
+    dst_data->array = NULL;
+    *dst_data = *src_data;
+    if( !src_data->array )
+        return 0;
+    dst_data->array = lsmash_malloc( src_data->numOfArrays * sizeof(lsmash_lhevc_paramater_arrays_t) );
+    if( !dst_data->array )
+        return LSMASH_ERR_MEMORY_ALLOC;
+    for( uint8_t i = 0; i < src_data->numOfArrays; i++ )
+    {
+        dst_data->array[i] = src_data->array[i];
+        dst_data->array[i].nalUnit = lsmash_malloc( src_data->array[i].numNalus * sizeof(lsmash_lhevc_nal_t) );
+        if( !dst_data->array[i].nalUnit )
+            return LSMASH_ERR_MEMORY_ALLOC;
+        for( uint16_t j = 0; j < src_data->array[i].numNalus; j++ )
+        {
+            dst_data->array[i].nalUnit[j] = src_data->array[i].nalUnit[j];
+            dst_data->array[i].nalUnit[j].nalUnit = lsmash_malloc( src_data->array[i].nalUnit[j].nalUnitLength );
+            if( !dst_data->array[i].nalUnit[j].nalUnit )
+                return LSMASH_ERR_MEMORY_ALLOC;
+            memcpy( dst_data->array[i].nalUnit[j].nalUnit, src_data->array[i].nalUnit[j].nalUnit, src_data->array[i].nalUnit[j].nalUnitLength );
+        }
+    }
+    return 0;
+}
+
+void lhevc_destruct_specific_data
+(
+    void *data
+)
+{
+    if( !data )
+        return;
+    lsmash_lhevc_specific_parameters_t *cs = (lsmash_lhevc_specific_parameters_t *)data;
+    lhevc_free_arrays( cs->array, cs->numOfArrays );
+    lsmash_free( data );
+}
+
+int lhevc_print_codec_specific
+(
+    FILE          *fp,
+    lsmash_file_t *file,
+    isom_box_t    *box,
+    int            level
+)
+{
+    assert( fp && LSMASH_IS_EXISTING_BOX( file ) && LSMASH_IS_EXISTING_BOX( box ) );
+    int indent = level;
+    lsmash_ifprintf( fp, indent++, "[%s: L-HEVC Configuration Box]\n", isom_4cc2str( box->type.fourcc ) );
+    lsmash_ifprintf( fp, indent, "position = %"PRIu64"\n", box->pos );
+    lsmash_ifprintf( fp, indent, "size = %"PRIu64"\n", box->size );
+
+    isom_lhvC_t *lhvC = (isom_lhvC_t *)box;
+    lsmash_ifprintf( fp, indent, "configurationVersion = %"PRIu8"\n", lhvC->configurationVersion);
+    lsmash_ifprintf( fp, indent, "min_spatial_segmentation_idc = %"PRIu16"\n", lhvC->min_spatial_segmentation_idc );
+    lsmash_ifprintf( fp, indent, "parallelismType = %"PRIu8"\n", lhvC->parallelismType );
+    lsmash_ifprintf( fp, indent, "numTemporalLayers = %"PRIu8"\n", lhvC->numTemporalLayers );
+    lsmash_ifprintf( fp, indent, "temporalIdNested = %"PRIu8"\n", lhvC->temporalIdNested );
+    lsmash_ifprintf( fp, indent, "lengthSizeMinusOne = %"PRIu8"\n", lhvC->lengthSizeMinusOne );
+    lsmash_ifprintf( fp, indent, "numOfArrays = %"PRIu8"\n", lhvC->numOfArrays );
+    indent++;
+
+    for( uint8_t i = 0; i < lhvC->numOfArrays; i++ )
+    {
+        lsmash_ifprintf( fp, indent, "array[%"PRIu8"]\n", i);
+        indent++;
+        lsmash_ifprintf( fp, indent, "array_completeness = %"PRIu8"\n", lhvC->array[i].array_completeness );
+        lsmash_ifprintf( fp, indent, "NAL_unit_type = %"PRIu8"\n", lhvC->array[i].NAL_unit_type );
+        lsmash_ifprintf( fp, indent, "numNalus = %"PRIu16"\n", lhvC->array[i].numNalus );
+        for( uint16_t j = 0; j < lhvC->array[i].numNalus; j++ )
+        {
+            lsmash_ifprintf( fp, indent, "nalUnit[%"PRIu16"]\n", i);
+            indent++;
+            lsmash_ifprintf( fp, indent, "nalUnitLength = %"PRIu16"\n", lhvC->array[i].nalUnit[j].nalUnitLength );
+            indent--;
+        }
+        indent--;
+    }
+
+    return 0;
+}

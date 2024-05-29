@@ -34,6 +34,7 @@
 
 #include "codecs/mp4a.h"
 #include "codecs/mp4sys.h"
+#include "codecs/hevc.h"
 
 #include "importer/importer.h"
 
@@ -698,6 +699,13 @@ static void isom_remove_esds( isom_esds_t *esds )
     if( LSMASH_IS_NON_EXISTING_BOX( esds ) )
         return;
     mp4sys_remove_descriptor( esds->ES );
+}
+
+static void isom_remove_lhvC( isom_lhvC_t *lhvC )
+{
+    if( LSMASH_IS_NON_EXISTING_BOX( lhvC ) )
+        return;
+    lhevc_free_arrays( lhvC->array, lhvC->numOfArrays );
 }
 
 DEFINE_SIMPLE_LIST_BOX_REMOVER( isom_remove_ftab, ftab )
@@ -1521,6 +1529,7 @@ DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_sgbt, sgbt, visual,   QT_BOX_TYPE
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_stsl, stsl, visual, ISOM_BOX_TYPE_STSL, LSMASH_BOX_PRECEDENCE_ISOM_STSL, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_btrt, btrt, visual, ISOM_BOX_TYPE_BTRT, LSMASH_BOX_PRECEDENCE_ISOM_BTRT, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_dovi, dovi, visual, ISOM_BOX_TYPE_DVVC, LSMASH_BOX_PRECEDENCE_ISOM_DOVI, 0, isom_visual_entry_t ) // DVVC is just a placeholder
+DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_lhvC, lhvC, visual, ISOM_BOX_TYPE_LHVC, LSMASH_BOX_PRECEDENCE_ISOM_LHVC, 1, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_st3d, st3d, visual, ISOM_BOX_TYPE_ST3D, LSMASH_BOX_PRECEDENCE_ISOM_ST3D, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_sv3d, sv3d, visual, ISOM_BOX_TYPE_SV3D, LSMASH_BOX_PRECEDENCE_ISOM_SV3D, 0, isom_visual_entry_t )
 DEFINE_SIMPLE_SAMPLE_EXTENSION_ADDER( isom_add_svhd, svhd, sv3d,   ISOM_BOX_TYPE_SVHD, LSMASH_BOX_PRECEDENCE_ISOM_SVHD, 0, isom_sv3d_t )

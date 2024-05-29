@@ -207,6 +207,7 @@ static int isom_initialize_structured_codec_specific_data( lsmash_codec_specific
     extern void mp4sys_destruct_decoder_config( void * );
     extern void h264_destruct_specific_data( void * );
     extern void hevc_destruct_specific_data( void * );
+    extern void lhevc_destruct_specific_data( void * );
     extern void av1_destruct_specific_data( void * );
     extern void vc1_destruct_specific_data( void * );
     extern void dts_destruct_specific_data( void * );
@@ -275,6 +276,10 @@ static int isom_initialize_structured_codec_specific_data( lsmash_codec_specific
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
             specific->size     = sizeof(lsmash_hevc_dovi_t);
             specific->destruct = lsmash_free;
+            break;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_LHEVC:
+            specific->size     = sizeof(lsmash_lhevc_specific_parameters_t);
+            specific->destruct = lhevc_destruct_specific_data;
             break;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE :
             specific->size     = sizeof(lsmash_isom_sample_scale_t);
@@ -394,6 +399,7 @@ static int isom_duplicate_structured_specific_data( lsmash_codec_specific_t *dst
     extern int mp4sys_copy_decoder_config( lsmash_codec_specific_t *, lsmash_codec_specific_t * );
     extern int h264_copy_codec_specific( lsmash_codec_specific_t *, lsmash_codec_specific_t * );
     extern int hevc_copy_codec_specific( lsmash_codec_specific_t *, lsmash_codec_specific_t * );
+    extern int lhevc_copy_codec_specific( lsmash_codec_specific_t *, lsmash_codec_specific_t * );
     extern int av1_copy_codec_specific( lsmash_codec_specific_t *, lsmash_codec_specific_t * );
     extern int vc1_copy_codec_specific( lsmash_codec_specific_t *, lsmash_codec_specific_t * );
     extern int dts_copy_codec_specific( lsmash_codec_specific_t *, lsmash_codec_specific_t * );
@@ -443,6 +449,9 @@ static int isom_duplicate_structured_specific_data( lsmash_codec_specific_t *dst
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI:
              *(lsmash_hevc_dovi_t *)dst_data = *(lsmash_hevc_dovi_t *)src_data;
              return 0;
+        case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_LHEVC:
+            lhevc_copy_codec_specific( dst, src );
+            return 0;
         case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE :
             *(lsmash_isom_sample_scale_t *)dst_data = *(lsmash_isom_sample_scale_t *)src_data;
             return 0;
@@ -952,6 +961,7 @@ static lsmash_box_type_t isom_guess_video_codec_specific_box_type( lsmash_codec_
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_ST3D );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_DVCC );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_DVVC );
+    GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED, ISOM_BOX_TYPE_LHVC );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED,   QT_BOX_TYPE_FIEL );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED,   QT_BOX_TYPE_CSPC );
     GUESS_VIDEO_CODEC_SPECIFIC_BOX_TYPE( LSMASH_CODEC_TYPE_UNSPECIFIED,   QT_BOX_TYPE_SGBT );
@@ -1087,6 +1097,53 @@ static int isom_setup_visual_description( isom_stsd_t *stsd, lsmash_video_summar
                 dovi->reserved2[1]                  = data->reserved2[1];
                 dovi->reserved2[2]                  = data->reserved2[2];
                 dovi->reserved2[3]                  = data->reserved2[3];
+                lsmash_destroy_codec_specific_data( cs );
+                break;
+            }
+            case LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_LHEVC :
+            {
+                lsmash_codec_specific_t *cs = lsmash_convert_codec_specific_format( specific, LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !cs )
+                    goto fail;
+                lsmash_lhevc_specific_parameters_t *data = (lsmash_lhevc_specific_parameters_t *)cs->data.structured;
+                isom_lhvC_t *lhvC = isom_add_lhvC( visual );
+                if( LSMASH_IS_NON_EXISTING_BOX( lhvC ) )
+                {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+                lhvC->configurationVersion         = data->configurationVersion;
+                lhvC->min_spatial_segmentation_idc = data->min_spatial_segmentation_idc;
+                lhvC->parallelismType              = data->parallelismType;
+                lhvC->numTemporalLayers            = data->numTemporalLayers;
+                lhvC->temporalIdNested             = data->temporalIdNested;
+                lhvC->lengthSizeMinusOne           = data->lengthSizeMinusOne;
+                lhvC->numOfArrays                  = data->numOfArrays;
+
+                lhvC->array = lsmash_malloc( data->numOfArrays * sizeof(lsmash_lhevc_paramater_arrays_t) );
+                if( !lhvC->array ) {
+                    lsmash_destroy_codec_specific_data( cs );
+                    goto fail;
+                }
+                for( uint8_t i = 0; i < data->numOfArrays; i++ )
+                {
+                    lhvC->array[i] = data->array[i];
+                    lhvC->array[i].nalUnit = lsmash_malloc( data->array[i].numNalus * sizeof(lsmash_lhevc_nal_t) );
+                    if( !lhvC->array[i].nalUnit ) {
+                        lsmash_destroy_codec_specific_data( cs );
+                        goto fail;
+                    }
+                    for( uint16_t j = 0; j < data->array[i].numNalus; j++ )
+                    {
+                        lhvC->array[i].nalUnit[j] = data->array[i].nalUnit[j];
+                        lhvC->array[i].nalUnit[j].nalUnit = lsmash_malloc( data->array[i].nalUnit[j].nalUnitLength );
+                        if( !lhvC->array[i].nalUnit[j].nalUnit ) {
+                            lsmash_destroy_codec_specific_data( cs );
+                            goto fail;
+                        }
+                        memcpy( lhvC->array[i].nalUnit[j].nalUnit, data->array[i].nalUnit[j].nalUnit, data->array[i].nalUnit[j].nalUnitLength );
+                    }
+                }
                 lsmash_destroy_codec_specific_data( cs );
                 break;
             }
@@ -2694,6 +2751,7 @@ static lsmash_codec_specific_data_type isom_get_codec_specific_data_type( lsmash
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_CBMP, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVCC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_DVVC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI );
+        ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_LHVC, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_LHEVC );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_ESDS, LSMASH_CODEC_SPECIFIC_DATA_TYPE_MP4SYS_DECODER_CONFIG );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_STSL, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE );
         ADD_CODEC_SPECIFIC_DATA_TYPE_TABLE_ELEMENT( ISOM_BOX_TYPE_BTRT, LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_H264_BITRATE );
@@ -2850,6 +2908,47 @@ lsmash_summary_t *isom_create_video_summary_from_description( isom_sample_entry_
                 data->reserved2[1]                  = dovi->reserved2[1];
                 data->reserved2[2]                  = dovi->reserved2[2];
                 data->reserved2[3]                  = dovi->reserved2[3];
+            }
+            else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_LHVC ) )
+            {
+                specific = lsmash_create_codec_specific_data( LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_LHEVC,
+                                                              LSMASH_CODEC_SPECIFIC_FORMAT_STRUCTURED );
+                if( !specific )
+                    goto fail;
+                isom_lhvC_t *lhvC = (isom_lhvC_t *)box;
+                lsmash_lhevc_specific_parameters_t *data = (lsmash_lhevc_specific_parameters_t *)specific->data.structured;
+                data->configurationVersion         = lhvC->configurationVersion;
+                data->min_spatial_segmentation_idc = lhvC->min_spatial_segmentation_idc;
+                data->parallelismType              = lhvC->parallelismType;
+                data->numTemporalLayers            = lhvC->numTemporalLayers;
+                data->temporalIdNested             = lhvC->temporalIdNested;
+                data->lengthSizeMinusOne           = lhvC->lengthSizeMinusOne;
+                data->numOfArrays                  = lhvC->numOfArrays;
+
+                data->array = lsmash_malloc( lhvC->numOfArrays * sizeof(lsmash_lhevc_paramater_arrays_t) );
+                if( !data->array ) {
+                    lsmash_destroy_codec_specific_data( specific );
+                    goto fail;
+                }
+                for( uint8_t i = 0; i < lhvC->numOfArrays; i++ )
+                {
+                    data->array[i] = lhvC->array[i];
+                    data->array[i].nalUnit = lsmash_malloc( lhvC->array[i].numNalus * sizeof(lsmash_lhevc_nal_t) );
+                    if( !data->array[i].nalUnit ) {
+                        lsmash_destroy_codec_specific_data( specific );
+                        goto fail;
+                    }
+                    for( uint16_t j = 0; j < lhvC->array[i].numNalus; j++ )
+                    {
+                        data->array[i].nalUnit[j] = lhvC->array[i].nalUnit[j];
+                        data->array[i].nalUnit[j].nalUnit = lsmash_malloc( lhvC->array[i].nalUnit[j].nalUnitLength );
+                        if( !data->array[i].nalUnit[j].nalUnit ) {
+                            lsmash_destroy_codec_specific_data( specific );
+                            goto fail;
+                        }
+                        memcpy( data->array[i].nalUnit[j].nalUnit, lhvC->array[i].nalUnit[j].nalUnit, lhvC->array[i].nalUnit[j].nalUnitLength );
+                    }
+                }
             }
             else if( lsmash_check_box_type_identical( box->type, ISOM_BOX_TYPE_ST3D ) )
             {

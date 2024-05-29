@@ -939,6 +939,7 @@ typedef enum
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_CBMP,
 
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_DOVI,
+    LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_HEVC_LHEVC,
 
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_SAMPLE_SCALE,
     LSMASH_CODEC_SPECIFIC_DATA_TYPE_ISOM_VIDEO_H264_BITRATE,
@@ -3420,6 +3421,32 @@ typedef struct
      * The NAL unit types are restricted to indicate VPS, SPS, PPS, and SEI NAL units only. */
     lsmash_hevc_parameter_arrays_t *parameter_arrays;
 } lsmash_hevc_specific_parameters_t;
+
+// Yes, I know this isn't properly integrated in L-SMASH and that I
+// should use lsmash_hevc_parameter_arrays_t. I will do that before
+// merge.
+typedef struct {
+    uint16_t nalUnitLength;
+    uint8_t *nalUnit;
+} lsmash_lhevc_nal_t;
+
+typedef struct {
+    uint8_t array_completeness;
+    uint8_t NAL_unit_type;
+    uint16_t numNalus;
+    lsmash_lhevc_nal_t *nalUnit;
+} lsmash_lhevc_paramater_arrays_t;
+
+typedef struct {
+    uint8_t configurationVersion;
+    uint16_t min_spatial_segmentation_idc;
+    uint8_t parallelismType;
+    uint8_t numTemporalLayers;
+    uint8_t temporalIdNested;
+    uint8_t lengthSizeMinusOne;
+    uint8_t numOfArrays;
+    lsmash_lhevc_paramater_arrays_t *array;
+} lsmash_lhevc_specific_parameters_t;
 
 int lsmash_setup_hevc_specific_parameters_from_access_unit
 (
