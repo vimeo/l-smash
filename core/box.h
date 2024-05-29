@@ -838,6 +838,12 @@ typedef struct
 typedef struct
 {
     ISOM_FULLBOX_COMMON;
+    uint32_t projection_type;
+} isom_prji_t;
+
+typedef struct
+{
+    ISOM_FULLBOX_COMMON;
     uint32_t projection_bounds_top;
     uint32_t projection_bounds_bottom;
     uint32_t projection_bounds_left;
@@ -858,6 +864,7 @@ typedef struct
     isom_prhd_t *prhd;
     isom_equi_t *equi;
     isom_cbmp_t *cbmp;
+    isom_prji_t *prji;
 } isom_proj_t;
 
 typedef struct
@@ -2272,6 +2279,7 @@ struct lsmash_root_tag
 #define LSMASH_BOX_PRECEDENCE_ISOM_PRHD (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_EQUI (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_CBMP (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
+#define LSMASH_BOX_PRECEDENCE_ISOM_PRJI (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_VEXU (LSMASH_BOX_PRECEDENCE_HM -  1 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_EYES (LSMASH_BOX_PRECEDENCE_HM -  2 * LSMASH_BOX_PRECEDENCE_S)
 #define LSMASH_BOX_PRECEDENCE_ISOM_MUST (LSMASH_BOX_PRECEDENCE_HM -  3 * LSMASH_BOX_PRECEDENCE_S)
@@ -2796,6 +2804,7 @@ isom_proj_t *isom_add_proj( isom_sv3d_t *sv3d );
 isom_prhd_t *isom_add_prhd( isom_proj_t *proj );
 isom_equi_t *isom_add_equi( isom_proj_t *proj );
 isom_cbmp_t *isom_add_cbmp( isom_proj_t *proj );
+isom_prji_t *isom_add_prji( isom_proj_t *proj );
 isom_vexu_t *isom_add_vexu( isom_visual_entry_t *visual );
 isom_eyes_t *isom_add_eyes( isom_vexu_t *vexu );
 isom_must_t *isom_add_must( isom_eyes_t *eyes );
