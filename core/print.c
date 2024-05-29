@@ -956,6 +956,34 @@ static int isom_print_hero( FILE *fp, lsmash_file_t *file, isom_box_t *box, int 
     return 0;
 }
 
+static int isom_print_cams( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    return isom_print_simple( fp, box, level, "Camera Box" );
+}
+
+static int isom_print_blin( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_blin_t *blin = (isom_blin_t *)box;
+    int indent = level;
+    isom_print_box_common( fp, indent++, box, "Baseline Box" );
+    lsmash_ifprintf( fp, indent, "micrometers = %"PRIu32"\n", blin->micrometers );
+    return 0;
+}
+
+static int isom_print_cmfy( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    return isom_print_simple( fp, box, level, "Comfy Box" );
+}
+
+static int isom_print_dadj( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
+{
+    isom_dadj_t *dadj = (isom_dadj_t *)box;
+    int indent = level;
+    isom_print_box_common( fp, indent++, box, "Horizontal Disparity Adjustment Box" );
+    lsmash_ifprintf( fp, indent, "adjustment = %"PRId32"\n", dadj->adjustment );
+    return 0;
+}
+
 static int isom_print_stsd( FILE *fp, lsmash_file_t *file, isom_box_t *box, int level )
 {
     isom_stsd_t *stsd = (isom_stsd_t *)box;
@@ -1506,7 +1534,7 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
     {
         lsmash_box_type_t type;
         int (*print_func)( FILE *, lsmash_file_t *, isom_box_t *, int );
-    } print_description_extension_table[71] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
+    } print_description_extension_table[75] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
     if( !print_description_extension_table[0].print_func )
     {
         /* Initialize the table. */
@@ -1556,6 +1584,10 @@ static int isom_print_sample_description_extesion( FILE *fp, lsmash_file_t *file
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_MUST, isom_print_must );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_STRI, isom_print_stri );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_HERO, isom_print_hero );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_CAMS, isom_print_cams );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_BLIN, isom_print_blin );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_CMFY, isom_print_cmfy );
+        ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_DADJ, isom_print_dadj );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_HFOV, isom_print_hfov );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT( ISOM_BOX_TYPE_FTAB, isom_print_ftab );
         ADD_PRINT_DESCRIPTION_EXTENSION_TABLE_ELEMENT(   QT_BOX_TYPE_ESDS, mp4sys_print_codec_specific );
@@ -2693,7 +2725,7 @@ static isom_print_box_t isom_select_print_func( isom_box_t *box )
     {
         lsmash_box_type_t type;
         isom_print_box_t  func;
-    } print_box_table[133] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
+    } print_box_table[137] = { { LSMASH_BOX_TYPE_INITIALIZER, NULL } };
     if( !print_box_table[0].func )
     {
         /* Initialize the table. */
@@ -2797,6 +2829,10 @@ static isom_print_box_t isom_select_print_func( isom_box_t *box )
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_MUST, isom_print_must );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_STRI, isom_print_stri );
         ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_HERO, isom_print_hero );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_CAMS, isom_print_cams );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_BLIN, isom_print_blin );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_CMFY, isom_print_cmfy );
+        ADD_PRINT_BOX_TABLE_ELEMENT( ISOM_BOX_TYPE_DADJ, isom_print_dadj );
         ADD_PRINT_BOX_TABLE_ELEMENT( LSMASH_BOX_TYPE_UNSPECIFIED, NULL );
 #undef ADD_PRINT_BOX_TABLE_ELEMENT
     }
