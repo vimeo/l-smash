@@ -3064,31 +3064,31 @@ static uint8_t derive_dovi_level
 {
     uint64_t pixels_per_second = ((uint64_t)width) * ((uint64_t)height) * ((uint64_t)timescale) / ((uint64_t)timebase);
 
-    if (pixels_per_second < 22118400ULL)
+    if (pixels_per_second <= 22118400ULL)
         return 1;
-    else if (pixels_per_second < 27648000ULL)
+    else if (pixels_per_second <= 27648000ULL)
         return 2;
-    else if (pixels_per_second < 49766400ULL)
+    else if (pixels_per_second <= 49766400ULL)
         return 3;
-    else if (pixels_per_second < 62208000ULL)
+    else if (pixels_per_second <= 62208000ULL)
         return 4;
-    else if (pixels_per_second < 124416000ULL)
+    else if (pixels_per_second <= 124416000ULL)
         return 5;
-    else if (pixels_per_second < 199065600ULL)
+    else if (pixels_per_second <= 199065600ULL)
         return 6;
-    else if (pixels_per_second < 248832000ULL)
+    else if (pixels_per_second <= 248832000ULL)
         return 7;
-    else if (pixels_per_second < 398131200ULL)
+    else if (pixels_per_second <= 398131200ULL)
         return 8;
-    else if (pixels_per_second < 497664000ULL)
+    else if (pixels_per_second <= 497664000ULL)
         return 9;
-    else if (pixels_per_second < 995328000ULL && width <= 3840)
+    else if (pixels_per_second <= 995328000ULL && width <= 3840)
         return 10;
-    else if (pixels_per_second < 995328000ULL)
+    else if (pixels_per_second <= 995328000ULL)
         return 11;
-    else if (pixels_per_second < 1990656000ULL)
+    else if (pixels_per_second <= 1990656000ULL)
         return 12;
-    else if (pixels_per_second < 3981312000ULL)
+    else if (pixels_per_second <= 3981312000ULL)
         return 13;
     return 0;
 }
