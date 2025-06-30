@@ -20,6 +20,7 @@
 .depend
 .DS_Store
 config.*
+!config.h.in
 boxdumper
 muxer
 remuxer
@@ -42,6 +43,8 @@ timelineeditor
 *.mp3
 *.mp4
 *.qt
+*.txt
+!CMakeLists.txt
 *.vc1
 Debug/
 CLIDebug/
