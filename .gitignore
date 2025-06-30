@@ -42,7 +42,6 @@ timelineeditor
 *.mp3
 *.mp4
 *.qt
-*.txt
 *.vc1
 Debug/
 CLIDebug/
