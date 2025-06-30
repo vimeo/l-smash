@@ -51,7 +51,9 @@ configure_file(
 )
 # --- Dependencies ---
 # L-SMASH requires obuparse. We find it here.
-find_package(OBUParse REQUIRED)
+if(NOT TARGET OBUParse::static AND NOT TARGET OBUParse::shared)
+    find_package(OBUParse REQUIRED)
+endif()
 
 # --- Source Files ---
 set(SRC_COMMON
