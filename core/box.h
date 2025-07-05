@@ -2724,12 +2724,11 @@ void isom_update_cache_timestamp
 static inline uint64_t isom_make_cts
 (
     uint64_t dts,
-    uint32_t sample_offset,
-    int32_t  ctd_shift
+    uint32_t sample_offset
 )
 {
     if( sample_offset != ISOM_NON_OUTPUT_SAMPLE_OFFSET )
-        return ctd_shift ? (dts + (int32_t)sample_offset) : (dts + sample_offset);
+        return dts + (int32_t)sample_offset;
     else
         return LSMASH_TIMESTAMP_UNDEFINED;
 }
@@ -2744,7 +2743,7 @@ static inline uint64_t isom_make_cts_adjust
 )
 {
     if( sample_offset != ISOM_NON_OUTPUT_SAMPLE_OFFSET )
-        return ctd_shift ? (dts + (int32_t)sample_offset + ctd_shift) : (dts + sample_offset);
+        return dts + (int32_t)sample_offset + ctd_shift;
     else
         return LSMASH_TIMESTAMP_UNDEFINED;
 }

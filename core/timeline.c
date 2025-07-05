@@ -436,7 +436,7 @@ static int isom_get_cts_from_info_list( isom_timeline_t *timeline, uint32_t samp
     isom_sample_info_t *info = (isom_sample_info_t *)lsmash_list_get_entry_data( timeline->info_list, sample_number );
     if( !info )
         return LSMASH_ERR_NAMELESS;
-    *cts = isom_make_cts( *cts, info->offset, timeline->ctd_shift );
+    *cts = isom_make_cts( *cts, info->offset );
     return 0;
 }
 
@@ -530,7 +530,7 @@ static lsmash_sample_t *isom_get_lpcm_sample_from_media_timeline( isom_timeline_
         return NULL;
     /* Get sample info. */
     sample->dts    = timeline->last_accessed_lpcm_bunch_dts + sample_number_offset * bunch->duration;
-    sample->cts    = isom_make_cts( sample->dts, bunch->offset, timeline->ctd_shift );
+    sample->cts    = isom_make_cts( sample->dts, bunch->offset );
     sample->pos    = sample_pos;
     sample->length = bunch->length;
     sample->index  = bunch->index;
@@ -553,7 +553,7 @@ static lsmash_sample_t *isom_get_sample_from_media_timeline( isom_timeline_t *ti
         return NULL;
     /* Get sample info. */
     sample->dts    = dts;
-    sample->cts    = isom_make_cts( dts, info->offset, timeline->ctd_shift );
+    sample->cts    = isom_make_cts( dts, info->offset );
     sample->pos    = info->pos;
     sample->length = info->length;
     sample->index  = info->index;
@@ -568,7 +568,7 @@ static int isom_get_lpcm_sample_info_from_media_timeline( isom_timeline_t *timel
         return LSMASH_ERR_NAMELESS;
     uint64_t sample_number_offset = sample_number - timeline->last_accessed_lpcm_bunch_first_sample_number;
     sample->dts    = timeline->last_accessed_lpcm_bunch_dts + sample_number_offset * bunch->duration;
-    sample->cts    = isom_make_cts( sample->dts, bunch->offset, timeline->ctd_shift );
+    sample->cts    = isom_make_cts( sample->dts, bunch->offset );
     sample->pos    = bunch->pos + sample_number_offset * bunch->length;
     sample->length = bunch->length;
     sample->index  = bunch->index;
@@ -586,7 +586,7 @@ static int isom_get_sample_info_from_media_timeline( isom_timeline_t *timeline, 
     if( !info )
         return LSMASH_ERR_NAMELESS;
     sample->dts    = dts;
-    sample->cts    = isom_make_cts( dts, info->offset, timeline->ctd_shift );
+    sample->cts    = isom_make_cts( dts, info->offset );
     sample->pos    = info->pos;
     sample->length = info->length;
     sample->index  = info->index;
@@ -1993,7 +1993,7 @@ int lsmash_get_media_timestamps( lsmash_root_t *root, uint32_t track_ID, lsmash_
                 return LSMASH_ERR_NAMELESS;
             }
             ts[i].dts = dts;
-            ts[i].cts = isom_make_cts( dts, info->offset, timeline->ctd_shift );
+            ts[i].cts = isom_make_cts( dts, info->offset );
             dts += info->duration;
             ++i;
         }
@@ -2009,7 +2009,7 @@ int lsmash_get_media_timestamps( lsmash_root_t *root, uint32_t track_ID, lsmash_
             for( uint32_t j = 0; j < bunch->sample_count; j++ )
             {
                 ts[i].dts = dts;
-                ts[i].cts = isom_make_cts( dts, bunch->offset, timeline->ctd_shift );
+                ts[i].cts = isom_make_cts( dts, bunch->offset );
                 dts += bunch->duration;
                 ++i;
             }
