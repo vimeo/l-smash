@@ -57,29 +57,89 @@ endif()
 
 # --- Source Files ---
 set(SRC_COMMON
-    common/alloc.c    common/bits.c    common/bytes.c
-    common/list.c     common/multibuf.c common/osdep.c    common/utils.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/alloc.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/bits.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/bytes.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/bytes.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/internal.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/list.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/list.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/memint.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/multibuf.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/multibuf.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/osdep.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/osdep.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/utils.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/utils.h"
 )
 set(SRC_CODECS
-    codecs/a52.c         codecs/alac.c        codecs/av1.c
-    codecs/av1_obu.c     codecs/description.c codecs/dts.c
-    codecs/h264.c        codecs/hevc.c        codecs/id.c
-    codecs/mp4sys.c      codecs/mp4a.c        codecs/mp4v.c
-    codecs/nalu.c        codecs/opus.c        codecs/qt_wfex.c
-    codecs/vc1.c         codecs/wma.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/a52.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/a52.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/alac.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/av1.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/av1.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/av1_obu.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/av1_obu.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/description.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/description.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/dts.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/dts.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/h264.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/h264.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/hevc.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/hevc.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/id.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/mp4a.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/mp4a.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/mp4sys.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/mp4sys.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/mp4v.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/nalu.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/nalu.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/opus.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/qt_wfex.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/vc1.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/vc1.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/codecs/wma.c"
 )
 set(SRC_IMPORTER
-    importer/a52_imp.c   importer/adts_imp.c  importer/als_imp.c
-    importer/amr_imp.c   importer/dts_imp.c   importer/importer.c
-    importer/isobm_imp.c importer/ivf_imp.c   importer/mp3_imp.c
-    importer/nalu_imp.c  importer/vc1_imp.c   importer/wave_imp.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/a52_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/adts_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/als_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/amr_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/dts_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/importer.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/importer.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/isobm_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/ivf_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/mp3_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/nalu_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/vc1_imp.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/importer/wave_imp.c"
 )
 set(SRC_CORE
-    core/box.c         core/box_default.c core/box_type.c
-    core/chapter.c     core/file.c        core/fragment.c
-    core/isom.c        core/meta.c        core/print.c
-    core/read.c        core/summary.c     core/timeline.c
-    core/write.c
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/box.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/box.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/box_default.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/box_default.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/box_type.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/box_type.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/chapter.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/file.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/file.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/fragment.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/fragment.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/isom.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/meta.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/print.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/print.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/read.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/read.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/summary.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/timeline.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/timeline.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/write.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/core/write.h"
 )
 set(LSMASH_SOURCES
     ${SRC_COMMON} ${SRC_CODECS} ${SRC_IMPORTER} ${SRC_CORE}
