@@ -407,20 +407,45 @@ static int isom_get_dts_from_info_list( isom_timeline_t *timeline, uint32_t samp
     }
     else
     {
-        *dts = 0;
-        uint32_t distance = sample_number - 1;
-        lsmash_entry_t *entry;
-        for( entry = timeline->info_list->head; entry; entry = entry->next )
+        uint64_t dts_temp;
+        uint32_t start_num;
+        lsmash_entry_t* entry;
+        if( timeline->last_accessed_sample_number > 0 && sample_number > timeline->last_accessed_sample_number )
         {
-            isom_sample_info_t *info = (isom_sample_info_t *)entry->data;
-            if( !info )
+            /* Forward scan from last accessed position. */
+            dts_temp = timeline->last_accessed_sample_dts;
+            start_num = timeline->last_accessed_sample_number;
+            entry = lsmash_list_get_entry(timeline->info_list, start_num);
+            if( !entry )
                 return LSMASH_ERR_NAMELESS;
-            if( distance-- == 0 )
-                break;
-            *dts += info->duration;
+            for( uint32_t i = start_num; i < sample_number; i++ )
+            {
+                isom_sample_info_t* info = (isom_sample_info_t*)entry->data;
+                if( !info )
+                    return LSMASH_ERR_NAMELESS;
+                dts_temp += info->duration;
+                entry = entry->next;
+                if( !entry && i < sample_number - 1 )
+                    return LSMASH_ERR_NAMELESS;
+            }
         }
-        if( !entry )
-            return LSMASH_ERR_NAMELESS;
+        else
+        {
+            /* Scan from beginning. */
+            dts_temp = 0;
+            entry = timeline->info_list->head;
+            for( uint32_t i = 1; i < sample_number; i++ )
+            {
+                if( !entry )
+                    return LSMASH_ERR_NAMELESS;
+                isom_sample_info_t* info = (isom_sample_info_t*)entry->data;
+                if( !info )
+                    return LSMASH_ERR_NAMELESS;
+                dts_temp += info->duration;
+                entry = entry->next;
+            }
+        }
+        *dts = dts_temp;
     }
     /* Note: last_accessed_sample_number is always updated together with last_accessed_sample_dts, and vice versa. */
     timeline->last_accessed_sample_dts    = *dts;
