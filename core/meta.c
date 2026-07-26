@@ -409,7 +409,7 @@ int lsmash_get_itunes_metadata( lsmash_root_t *root, uint32_t metadata_number, l
     /* Get 'meaning'. */
     int err = LSMASH_ERR_MEMORY_ALLOC;
     isom_mean_t *mean = metaitem->mean;
-    if( LSMASH_IS_NON_EXISTING_BOX( mean ) )
+    if( LSMASH_IS_EXISTING_BOX( mean ) )
     {
         uint8_t *temp = lsmash_malloc( mean->meaning_string_length + 1 );
         if( !temp )
@@ -422,7 +422,7 @@ int lsmash_get_itunes_metadata( lsmash_root_t *root, uint32_t metadata_number, l
         metadata->meaning = NULL;
     /* Get 'name'. */
     isom_name_t *name = metaitem->name;
-    if( LSMASH_IS_NON_EXISTING_BOX( name ) )
+    if( LSMASH_IS_EXISTING_BOX( name ) )
     {
         uint8_t *temp = lsmash_malloc( name->name_length + 1 );
         if( !temp )
