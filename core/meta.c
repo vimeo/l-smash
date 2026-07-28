@@ -394,6 +394,7 @@ int lsmash_get_itunes_metadata( lsmash_root_t *root, uint32_t metadata_number, l
 {
     if( isom_check_initializer_present( root ) < 0 || !metadata )
         return LSMASH_ERR_FUNCTION_PARAM;
+    memset( metadata, 0, sizeof( *metadata ) );
     lsmash_file_t *file = root->file->initializer;
     if( !file->moov->udta->meta->ilst )
         return LSMASH_ERR_NAMELESS;
@@ -409,7 +410,7 @@ int lsmash_get_itunes_metadata( lsmash_root_t *root, uint32_t metadata_number, l
     /* Get 'meaning'. */
     int err = LSMASH_ERR_MEMORY_ALLOC;
     isom_mean_t *mean = metaitem->mean;
-    if( LSMASH_IS_EXISTING_BOX( mean ) )
+    if( LSMASH_IS_EXISTING_BOX( mean ) && mean->meaning_string && mean->meaning_string_length > 0 )
     {
         uint8_t *temp = lsmash_malloc( mean->meaning_string_length + 1 );
         if( !temp )
@@ -422,7 +423,7 @@ int lsmash_get_itunes_metadata( lsmash_root_t *root, uint32_t metadata_number, l
         metadata->meaning = NULL;
     /* Get 'name'. */
     isom_name_t *name = metaitem->name;
-    if( LSMASH_IS_EXISTING_BOX( name ) )
+    if( LSMASH_IS_EXISTING_BOX( name ) && name->name && name->name_length > 0 )
     {
         uint8_t *temp = lsmash_malloc( name->name_length + 1 );
         if( !temp )
