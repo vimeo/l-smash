@@ -1,0 +1,3 @@
+// This file is configured by CMake and generated into the build directory
+#define LSMASH_REV "@LSMASH_REV@"
+#define LSMASH_GIT_HASH "@LSMASH_GIT_HASH@"
